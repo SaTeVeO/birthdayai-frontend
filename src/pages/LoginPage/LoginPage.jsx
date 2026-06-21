@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
 
 const inputBase = {
   width: '100%',
@@ -19,25 +20,36 @@ function isPassValid(v)  { return v.length >= 6 }
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const [email,    setEmail]    = useState('')
-  const [password, setPassword] = useState('')
-  const [touched,  setTouched]  = useState(false)
+  const [email,       setEmail]       = useState('')
+  const [password,    setPassword]    = useState('')
+  const [touched,     setTouched]     = useState(false)
+  const [submitting,  setSubmitting]  = useState(false)
+  const [serverError, setServerError] = useState('')
 
   const emailOk = isEmailValid(email)
   const passOk  = isPassValid(password)
   const emailErr = touched && !emailOk
   const passErr  = touched && !passOk
-  const showError = emailErr || passErr
+  const showError = emailErr || passErr || !!serverError
 
-  const errorMsg = (emailErr && passErr)
+  const errorMsg = serverError
+    ? serverError
+    : (emailErr && passErr)
     ? 'נא להזין כתובת אימייל וסיסמה תקינות'
     : emailErr
     ? 'כתובת האימייל אינה תקינה'
     : 'הסיסמה חייבת להכיל לפחות 6 תווים'
 
-  function submit() {
-    if (emailOk && passOk) { navigate('/dashboard'); return }
-    setTouched(true)
+  async function submit() {
+    setServerError('')
+    if (!emailOk || !passOk) { setTouched(true); return }
+
+    setSubmitting(true)
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setSubmitting(false)
+
+    if (error) { setServerError('אימייל או סיסמה שגויים'); return }
+    navigate('/dashboard')
   }
 
   return (
@@ -109,15 +121,17 @@ export default function LoginPage() {
 
           <button
             onClick={submit}
+            disabled={submitting}
             style={{
               width: '100%', padding: 13,
               borderRadius: 'var(--radius-sm)',
               background: 'var(--color-primary)', color: 'var(--color-surface)',
               fontWeight: 700, fontSize: 'var(--font-size-body-min)',
-              border: 'none', cursor: 'pointer',
+              border: 'none', cursor: submitting ? 'not-allowed' : 'pointer',
+              opacity: submitting ? 0.7 : 1,
               boxShadow: 'var(--shadow-btn-primary)',
             }}
-          >כניסה</button>
+          >{submitting ? '...' : 'כניסה'}</button>
 
           {/* Divider */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>

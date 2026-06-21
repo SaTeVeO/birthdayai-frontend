@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
 
 const inputBase = {
   width: '100%',
@@ -24,6 +25,8 @@ export default function RegisterPage() {
   const [password,    setPassword]    = useState('')
   const [confirmPass, setConfirmPass] = useState('')
   const [touched,     setTouched]     = useState(false)
+  const [submitting,  setSubmitting]  = useState(false)
+  const [serverError, setServerError] = useState('')
 
   const nameOk  = name.trim().length > 0
   const emailOk = isEmailValid(email)
@@ -35,17 +38,29 @@ export default function RegisterPage() {
   const passErr  = touched && !passOk
   const matchErr = touched && passOk && !matchOk
 
-  const showError = nameErr || emailErr || passErr || matchErr
+  const showError = nameErr || emailErr || passErr || matchErr || !!serverError
 
-  const errorMsg = nameErr  ? 'נא להזין שם מלא'
+  const errorMsg = serverError ? serverError
+    : nameErr  ? 'נא להזין שם מלא'
     : emailErr ? 'כתובת האימייל אינה תקינה'
     : passErr  ? 'הסיסמה חייבת להכיל לפחות 6 תווים'
     : matchErr ? 'הסיסמאות אינן תואמות'
     : ''
 
-  function submit() {
-    if (nameOk && emailOk && passOk && matchOk) { navigate('/dashboard'); return }
-    setTouched(true)
+  async function submit() {
+    setServerError('')
+    if (!nameOk || !emailOk || !passOk || !matchOk) { setTouched(true); return }
+
+    setSubmitting(true)
+    const { data, error } = await supabase.auth.signUp({ email, password })
+    if (error) { setServerError(error.message); setSubmitting(false); return }
+
+    if (data.user) {
+      await supabase.from('profiles').insert({ id: data.user.id, name: name.trim() })
+    }
+
+    setSubmitting(false)
+    navigate('/dashboard')
   }
 
   return (
@@ -139,15 +154,17 @@ export default function RegisterPage() {
 
           <button
             onClick={submit}
+            disabled={submitting}
             style={{
               width: '100%', padding: 13,
               borderRadius: 'var(--radius-sm)',
               background: 'var(--color-primary)', color: 'var(--color-surface)',
               fontWeight: 700, fontSize: 'var(--font-size-body-min)',
-              border: 'none', cursor: 'pointer',
+              border: 'none', cursor: submitting ? 'not-allowed' : 'pointer',
+              opacity: submitting ? 0.7 : 1,
               boxShadow: 'var(--shadow-btn-primary)',
             }}
-          >הירשם</button>
+          >{submitting ? '...' : 'הירשם'}</button>
 
           {/* Divider */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>

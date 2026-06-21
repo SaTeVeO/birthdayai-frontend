@@ -1,28 +1,157 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../hooks/useAuth'
+import AddContactModal from '../../components/AddContactModal/AddContactModal'
 
-const CONTACTS = [
-  { id: '1', name: 'דנה לוי',   initial: 'ד', relationship: 'אחות',          dateLabel: '19 ביוני', today: true,  daysLabel: '',             avatarBg: 'var(--avatar-1-bg)', avatarColor: 'var(--avatar-1-text)', hobbies: ['ריצה', 'ציור'] },
-  { id: '2', name: 'יוסי כהן',  initial: 'י', relationship: 'חבר מהצבא',     dateLabel: '22 ביוני', today: false, daysLabel: 'בעוד 3 ימים',  avatarBg: 'var(--avatar-2-bg)', avatarColor: 'var(--avatar-2-text)', hobbies: ['כדורגל', 'בישול'] },
-  { id: '3', name: 'מיכל ברג',  initial: 'מ', relationship: 'עמית לעבודה',   dateLabel: '25 ביוני', today: false, daysLabel: 'בעוד 6 ימים',  avatarBg: 'var(--avatar-3-bg)', avatarColor: 'var(--avatar-3-text)', hobbies: ['יוגה', 'קריאה'] },
-  { id: '4', name: 'אורי שמיר', initial: 'א', relationship: 'בן דוד',        dateLabel: '28 ביוני', today: false, daysLabel: 'בעוד 9 ימים',  avatarBg: 'var(--avatar-5-bg)', avatarColor: 'var(--avatar-5-text)', hobbies: ['גיטרה', 'טיולים'] },
+const MONTHS_HE = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר']
+
+const AVATAR_SLOTS = [
+  { bg: 'var(--avatar-1-bg)', color: 'var(--avatar-1-text)' },
+  { bg: 'var(--avatar-2-bg)', color: 'var(--avatar-2-text)' },
+  { bg: 'var(--avatar-3-bg)', color: 'var(--avatar-3-text)' },
+  { bg: 'var(--avatar-4-bg)', color: 'var(--avatar-4-text)' },
+  { bg: 'var(--avatar-5-bg)', color: 'var(--avatar-5-text)' },
 ]
 
-const STATS    = { contacts: 12, month: 4, sent: 31 }
+// Parse "YYYY-MM-DD" without UTC shift
+function parseBirthday(str) {
+  const [, m, d] = str.split('-').map(Number)
+  return { month: m - 1, day: d }
+}
 
-const ACTIVITY = [
-  { id: 1, text: 'ברכה נשלחה לדנה לוי בוואטסאפ',         meta: 'היום, 08:00',     dot: 'var(--color-primary)' },
-  { id: 2, text: 'ברכת יום הולדת נוצרה עבור יוסי כהן',    meta: 'אתמול, 14:30',   dot: 'var(--color-accent)'  },
-  { id: 3, text: 'איש קשר חדש הוסף: מיכל ברג',            meta: 'לפני 3 ימים',    dot: 'var(--color-success)' },
-]
+function daysUntil(birthday) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const { month, day } = parseBirthday(birthday)
+  const next = new Date(today.getFullYear(), month, day)
+  if (next < today) next.setFullYear(today.getFullYear() + 1)
+  return Math.round((next - today) / 86400000)
+}
+
+function birthdayLabel(birthday) {
+  const { month, day } = parseBirthday(birthday)
+  return `${day} ב${MONTHS_HE[month]}`
+}
+
+function daysText(days) {
+  if (days === 1) return 'מחר'
+  return `בעוד ${days} ימים`
+}
+
+function activityMeta(iso) {
+  const d = new Date(iso)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const itemDate = new Date(d)
+  itemDate.setHours(0, 0, 0, 0)
+  const time     = d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+  const diffDays = Math.round((today - itemDate) / 86400000)
+  if (diffDays === 0) return `היום, ${time}`
+  if (diffDays === 1) return `אתמול, ${time}`
+  return `לפני ${diffDays} ימים`
+}
+
+function activityText(g) {
+  const name = g.contacts?.name || 'איש קשר'
+  return g.status === 'sent' ? `ברכה נשלחה ל${name}` : `ברכה נוצרה עבור ${name}`
+}
+
+function activityDot(status) {
+  return status === 'sent' ? 'var(--color-primary)' : 'var(--color-accent)'
+}
 
 export default function Dashboard() {
-  const navigate = useNavigate()
-  const [showEmpty, setShowEmpty] = useState(false)
-  const contacts = showEmpty ? [] : CONTACTS
+  const navigate  = useNavigate()
+  const location  = useLocation()
+  const { user }  = useAuth()
+
+  const [contacts,       setContacts]       = useState([])
+  const [sentCount,      setSentCount]      = useState(0)
+  const [recentActivity, setRecentActivity] = useState([])
+  const [userName,       setUserName]       = useState('')
+  const [loading,        setLoading]        = useState(true)
+  const [showAddModal,   setShowAddModal]   = useState(false)
+  const [refreshKey,     setRefreshKey]     = useState(0)
+
+  // Open modal via custom event dispatched from Navbar
+  useEffect(() => {
+    const handler = () => setShowAddModal(true)
+    window.addEventListener('openAddContact', handler)
+    return () => window.removeEventListener('openAddContact', handler)
+  }, [])
+
+  useEffect(() => {
+    if (!user) return
+
+    async function load() {
+      setLoading(true)
+
+      const [{ data: rows }, { data: profile }] = await Promise.all([
+        supabase.from('contacts').select('*').eq('user_id', user.id).order('birthday'),
+        supabase.from('profiles').select('name').eq('user_id', user.id).single(),
+      ])
+
+      setUserName(profile?.name || user.email?.split('@')[0] || '')
+
+      const enriched = (rows ?? [])
+        .map((c, i) => ({
+          ...c,
+          days:        daysUntil(c.birthday),
+          dateLabel:   birthdayLabel(c.birthday),
+          initial:     (c.name || '?')[0],
+          avatarBg:    AVATAR_SLOTS[i % AVATAR_SLOTS.length].bg,
+          avatarColor: AVATAR_SLOTS[i % AVATAR_SLOTS.length].color,
+        }))
+        .sort((a, b) => a.days - b.days)
+
+      setContacts(enriched)
+
+      const [sentResult, activityResult] = await Promise.all([
+        enriched.length > 0
+          ? supabase
+              .from('greetings')
+              .select('id', { count: 'exact', head: true })
+              .in('contact_id', enriched.map(c => c.id))
+              .eq('status', 'sent')
+          : Promise.resolve({ count: 0 }),
+        supabase
+          .from('greetings')
+          .select('*, contacts(name)')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(5),
+      ])
+
+      setSentCount(sentResult.count ?? 0)
+      setRecentActivity(activityResult.data ?? [])
+
+      setLoading(false)
+    }
+
+    load()
+  }, [user, refreshKey, location.key])
+
+  function handleContactAdded() {
+    setShowAddModal(false)
+    setRefreshKey(k => k + 1)
+  }
+
+  const currentMonth   = new Date().getMonth()
+  const thisMonthCount = contacts.filter(c => parseBirthday(c.birthday).month === currentMonth).length
+  const upcomingCount  = contacts.filter(c => c.days > 0 && c.days <= 30).length
+
+  if (loading) {
+    return (
+      <main style={{ maxWidth: 1080, margin: '0 auto', padding: 'var(--space-8)', display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
+        <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-body-min)' }}>טוען...</span>
+      </main>
+    )
+  }
 
   return (
     <main className="dashboard-main" style={{ maxWidth: 1080, margin: '0 auto', padding: 'var(--space-8)' }}>
+
       {/* ── Header ─────────────────────────────────────── */}
       <div style={{
         display: 'flex', alignItems: 'flex-start',
@@ -34,21 +163,13 @@ export default function Dashboard() {
             fontWeight: 'var(--font-weight-page-title)',
             letterSpacing: 'var(--letter-spacing-page-title)',
             margin: 0, color: 'var(--color-text-primary)',
-          }}>שלום, שיר 👋</h1>
+          }}>שלום, {userName} 👋</h1>
           <p style={{ margin: '6px 0 0', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-body-min)' }}>
             {contacts.length === 0
               ? 'בוא נתחיל — אין עדיין אנשי קשר'
-              : `יש לך ${contacts.filter(c => !c.today).length} ימי הולדת ב‑30 הימים הקרובים`}
+              : `יש לך ${upcomingCount} ימי הולדת ב‑30 הימים הקרובים`}
           </p>
         </div>
-        <button
-          onClick={() => setShowEmpty(e => !e)}
-          style={{
-            padding: '7px 14px', borderRadius: 'var(--radius-sm)',
-            background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-            color: 'var(--color-text-muted)', fontWeight: 600, fontSize: 13, cursor: 'pointer',
-          }}
-        >{showEmpty ? 'הצג אנשי קשר' : 'הצג מצב ריק'}</button>
       </div>
 
       {/* ── Two-column grid ─────────────────────────────── */}
@@ -78,26 +199,41 @@ export default function Dashboard() {
               <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-body-min)', margin: '0 auto var(--space-6)', maxWidth: 360, lineHeight: 'var(--line-height-body)' }}>
                 הוסף את איש הקשר הראשון שלך כדי ש‑BirthdayAI יתחיל לעקוב ולשלוח ברכות אוטומטית.
               </p>
-              <button style={{
-                padding: '12px 22px', borderRadius: 'var(--radius-sm)',
-                background: 'var(--color-primary)', color: 'var(--color-surface)',
-                fontWeight: 600, fontSize: 'var(--font-size-body-min)',
-                border: 'none', cursor: 'pointer', boxShadow: 'var(--shadow-btn-primary)',
-              }}>+ הוסף איש קשר ראשון</button>
+              <button
+                onClick={() => setShowAddModal(true)}
+                style={{
+                  padding: '12px 22px', borderRadius: 'var(--radius-sm)',
+                  background: 'var(--color-primary)', color: 'var(--color-surface)',
+                  fontWeight: 600, fontSize: 'var(--font-size-body-min)',
+                  border: 'none', cursor: 'pointer', boxShadow: 'var(--shadow-btn-primary)',
+                }}
+              >+ הוסף איש קשר ראשון</button>
             </div>
           ) : (
             <>
-              <h2 style={{ fontSize: 'var(--font-size-label-max)', fontWeight: 700, color: 'var(--color-text-muted)', margin: '0 0 14px' }}>
-                ימי הולדת קרובים
-              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                <h2 style={{ fontSize: 'var(--font-size-label-max)', fontWeight: 700, color: 'var(--color-text-muted)', margin: 0 }}>
+                  ימי הולדת קרובים
+                </h2>
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  style={{
+                    padding: '7px 14px', borderRadius: 'var(--radius-sm)',
+                    background: 'var(--color-primary)', color: 'var(--color-surface)',
+                    fontWeight: 600, fontSize: 13,
+                    border: 'none', cursor: 'pointer',
+                    boxShadow: '0 1px 2px rgba(99,102,241,.4)',
+                  }}
+                >+ הוסף</button>
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                 {contacts.map(c => (
                   <div key={c.id} className="contact-card" style={{
                     display: 'flex', alignItems: 'center', gap: 14, padding: 14,
                     borderRadius: 'var(--radius-md)',
-                    border: c.today ? '1.5px solid var(--color-border-highlight)' : '1px solid var(--color-border-subtle)',
+                    border: c.days === 0 ? '1.5px solid var(--color-border-highlight)' : '1px solid var(--color-border-subtle)',
                     background: 'var(--color-surface)',
-                    boxShadow: c.today ? 'var(--shadow-raised)' : 'var(--shadow-card)',
+                    boxShadow: c.days === 0 ? 'var(--shadow-raised)' : 'var(--shadow-card)',
                   }}>
                     <div style={{
                       width: 44, height: 44, borderRadius: 'var(--radius-full)',
@@ -109,7 +245,7 @@ export default function Dashboard() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                         <span style={{ fontWeight: 700, fontSize: 'var(--font-size-card-title-min)' }}>{c.name}</span>
-                        {c.today && (
+                        {c.days === 0 && (
                           <span style={{
                             fontSize: 11, fontWeight: 700,
                             color: 'var(--color-accent-badge-text)',
@@ -124,12 +260,12 @@ export default function Dashboard() {
                     </div>
 
                     <div className="contact-card-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 'var(--space-2)' }}>
-                      {!c.today && (
+                      {c.days > 0 && (
                         <span style={{ fontSize: 13, color: 'var(--color-text-faint)', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                          {c.daysLabel}
+                          {daysText(c.days)}
                         </span>
                       )}
-                      {c.today ? (
+                      {c.days === 0 ? (
                         <button
                           onClick={() => navigate('/edit-greeting', { state: { contact: c } })}
                           style={{
@@ -176,9 +312,9 @@ export default function Dashboard() {
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {[
-                { label: 'אנשי קשר',         value: STATS.contacts, color: 'var(--color-text-primary)' },
-                { label: 'ימי הולדת החודש',   value: STATS.month,    color: 'var(--color-primary)'      },
-                { label: 'ברכות שנשלחו',      value: STATS.sent,     color: 'var(--color-success)'      },
+                { label: 'אנשי קשר',        value: contacts.length, color: 'var(--color-text-primary)' },
+                { label: 'ימי הולדת החודש',  value: thisMonthCount,  color: 'var(--color-primary)'      },
+                { label: 'ברכות שנשלחו',     value: sentCount,       color: 'var(--color-success)'      },
               ].map(({ label, value, color }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-label-max)' }}>{label}</span>
@@ -198,24 +334,37 @@ export default function Dashboard() {
             <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-muted)', margin: '0 0 var(--space-1)' }}>
               פעילות אחרונה
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}>
-              {ACTIVITY.map(a => (
-                <div key={a.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  <span style={{
-                    width: 8, height: 8, borderRadius: '50%',
-                    background: a.dot, flexShrink: 0, marginTop: 4,
-                  }} />
-                  <div>
-                    <div style={{ fontSize: 13.5, color: 'var(--color-text-primary)', lineHeight: 1.4 }}>{a.text}</div>
-                    <div style={{ fontSize: 'var(--font-size-label-min)', color: 'var(--color-text-faint)', marginTop: 2 }}>{a.meta}</div>
+            {recentActivity.length === 0 ? (
+              <p style={{ fontSize: 13, color: 'var(--color-text-faint)', textAlign: 'center', margin: '14px 0 0' }}>
+                אין פעילות אחרונה
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}>
+                {recentActivity.map(g => (
+                  <div key={g.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <span style={{
+                      width: 8, height: 8, borderRadius: '50%',
+                      background: activityDot(g.status), flexShrink: 0, marginTop: 4,
+                    }} />
+                    <div>
+                      <div style={{ fontSize: 13.5, color: 'var(--color-text-primary)', lineHeight: 1.4 }}>{activityText(g)}</div>
+                      <div style={{ fontSize: 'var(--font-size-label-min)', color: 'var(--color-text-faint)', marginTop: 2 }}>{activityMeta(g.created_at)}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
         </div>
       </div>
+
+      {showAddModal && (
+        <AddContactModal
+          onClose={() => setShowAddModal(false)}
+          onSuccess={handleContactAdded}
+        />
+      )}
     </main>
   )
 }

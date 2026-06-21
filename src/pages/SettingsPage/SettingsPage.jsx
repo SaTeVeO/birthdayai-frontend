@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../hooks/useAuth'
 
 const card = {
   background: 'var(--color-surface)',
@@ -54,21 +55,87 @@ function ToggleGroup({ options, value, onChange }) {
 }
 
 export default function SettingsPage() {
-  const navigate = useNavigate()
+  const { user } = useAuth()
 
-  const [name,         setName]         = useState('שיר לוי')
-  const [email,        setEmail]        = useState('shir@example.com')
-  const [reminderDays, setReminderDays] = useState(3)
-  const [channel,      setChannel]      = useState('whatsapp')
-  const [language,     setLanguage]     = useState('he')
-  const [saved,        setSaved]        = useState(false)
+  const [name,             setName]             = useState('')
+  const [email,            setEmail]            = useState('')
+  const [reminderDays,     setReminderDays]     = useState(3)
+  const [preferredChannel, setPreferredChannel] = useState('whatsapp')
+  const [language,         setLanguage]         = useState('he')
+  const [success,          setSuccess]          = useState('')
+  const [error,            setError]            = useState('')
+  const [loading,          setLoading]          = useState(true)
 
-  function handleSave() {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+  useEffect(() => {
+    if (!user) return
+
+    async function load() {
+      setEmail(user.email || '')
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (profile) {
+        setName(profile.name || '')
+        setReminderDays(profile.reminder_days_before ?? 3)
+        setPreferredChannel(profile.preferred_channel || 'whatsapp')
+        setLanguage(profile.language || 'he')
+      }
+
+      setLoading(false)
+    }
+
+    load()
+  }, [user])
+
+  async function handleSave() {
+    console.log('saving for user.id:', user.id)
+    console.log('data to upsert:', { name, preferredChannel, reminderDays, language })
+
+    const { data, error: upsertError } = await supabase
+      .from('profiles')
+      .upsert(
+        {
+          user_id:              user.id,
+          name:                 name,
+          preferred_channel:    preferredChannel,
+          reminder_days_before: reminderDays,
+          language:             language,
+        },
+        { onConflict: 'user_id' }
+      )
+
+    console.log('upsert result:', data, upsertError)
+
+    if (upsertError) {
+      console.error('Supabase error:', upsertError)
+      setError('שמירת ההגדרות נכשלה: ' + upsertError.message)
+      setTimeout(() => setError(''), 4000)
+    } else {
+      setSuccess('ההגדרות נשמרו ✓')
+      setTimeout(() => setSuccess(''), 3000)
+    }
   }
 
-  const userInitial = (name || 'ש')[0]
+  const handleLogout = async () => {
+    await supabase.auth.signOut({ scope: 'local' })
+    window.localStorage.clear()
+    window.sessionStorage.clear()
+    window.location.href = '/login'
+  }
+
+  const userInitial = (name || email || '?')[0]
+
+  if (loading) {
+    return (
+      <main style={{ maxWidth: 600, margin: '0 auto', padding: 'var(--space-8)', display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
+        <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-body-min)' }}>טוען...</span>
+      </main>
+    )
+  }
 
   return (
     <main className="settings-main" style={{ maxWidth: 600, margin: '0 auto', padding: 'var(--space-8)' }}>
@@ -86,7 +153,6 @@ export default function SettingsPage() {
       <div style={card}>
         <h2 style={sectionTitle}>פרטי משתמש</h2>
 
-        {/* Avatar + summary */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginBottom: 'var(--space-5)' }}>
           <div style={{
             width: 56, height: 56, borderRadius: 'var(--radius-full)',
@@ -95,7 +161,7 @@ export default function SettingsPage() {
             fontWeight: 800, fontSize: 20, flexShrink: 0,
           }}>{userInitial}</div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 'var(--font-size-body-max)', color: 'var(--color-text-primary)' }}>{name}</div>
+            <div style={{ fontWeight: 700, fontSize: 'var(--font-size-body-max)', color: 'var(--color-text-primary)' }}>{name || '—'}</div>
             <div style={{ fontSize: 'var(--font-size-label-max)', color: 'var(--color-text-muted)', marginTop: 2 }}>{email}</div>
           </div>
         </div>
@@ -109,9 +175,8 @@ export default function SettingsPage() {
 
         <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>אימייל</label>
         <input
-          type="email" dir="ltr" value={email}
-          onChange={e => setEmail(e.target.value)}
-          style={inputStyle}
+          type="email" dir="ltr" value={email} readOnly
+          style={{ ...inputStyle, opacity: 0.6, cursor: 'not-allowed' }}
         />
       </div>
 
@@ -136,8 +201,8 @@ export default function SettingsPage() {
       <div style={card}>
         <h2 style={sectionTitle}>ערוץ שליחה מועדף</h2>
         <ToggleGroup
-          value={channel}
-          onChange={setChannel}
+          value={preferredChannel}
+          onChange={setPreferredChannel}
           options={[
             { value: 'whatsapp', label: 'WhatsApp' },
             { value: 'email',    label: 'Email'    },
@@ -173,12 +238,12 @@ export default function SettingsPage() {
         >שמור שינויים</button>
 
         <button
-          onClick={() => navigate('/')}
+          onClick={handleLogout}
           style={{
             width: '100%', padding: 13,
             borderRadius: 'var(--radius-sm)',
             background: 'var(--color-error-bg)',
-            border: '1px solid #FECACA',
+            border: '1px solid var(--color-border-error)',
             color: 'var(--color-error-text)',
             fontWeight: 700, fontSize: 'var(--font-size-body-min)',
             cursor: 'pointer',
@@ -186,8 +251,31 @@ export default function SettingsPage() {
         >התנתקות</button>
       </div>
 
+      {/* ── Error toast ───────────────────────────────────── */}
+      {error && (
+        <div style={{
+          position: 'fixed', bottom: 24, left: 24,
+          display: 'flex', alignItems: 'center', gap: 'var(--space-3)',
+          background: 'var(--color-error-bg)',
+          border: '1px solid var(--color-border-error)',
+          color: 'var(--color-error-text)',
+          padding: '12px var(--space-4)', borderRadius: 'var(--radius-md)',
+          boxShadow: 'var(--shadow-raised)',
+          fontWeight: 600, fontSize: 'var(--font-size-body-min)',
+          zIndex: 200,
+        }}>
+          <span style={{
+            width: 20, height: 20, borderRadius: '50%',
+            background: 'var(--color-error)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'var(--color-surface)', fontSize: 12, flexShrink: 0,
+          }}>!</span>
+          {error}
+        </div>
+      )}
+
       {/* ── Success toast ─────────────────────────────────── */}
-      {saved && (
+      {success && (
         <div style={{
           position: 'fixed', bottom: 24, left: 24,
           display: 'flex', alignItems: 'center', gap: 'var(--space-3)',
@@ -205,7 +293,7 @@ export default function SettingsPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: 'var(--color-surface)', fontSize: 12, flexShrink: 0,
           }}>✓</span>
-          ההגדרות נשמרו
+          {success}
         </div>
       )}
     </main>

@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-
-const LOGGED_IN_ROUTES = ['/dashboard', '/edit-greeting', '/settings']
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../hooks/useAuth'
 
 function Logomark({ onClick }) {
   return (
@@ -59,15 +59,29 @@ const darkBtnStyle = {
   fontSize: 15, lineHeight: 1,
 }
 
-export default function Navbar({ variant = 'landing', userName = 'שיר' }) {
+export default function Navbar({ variant = 'landing' }) {
   const navigate = useNavigate()
-  const { pathname } = useLocation()
-  const [comingSoon, setComingSoon] = useState(false)
+  const { user } = useAuth()
+  const [displayName,  setDisplayName]  = useState('')
   const { dark, toggle } = useDark()
 
-  const userInitial = (userName || 'ש')[0]
-  const logoTo      = LOGGED_IN_ROUTES.includes(pathname) ? '/dashboard' : '/'
-  const onLogoClick = () => navigate(logoTo)
+  useEffect(() => {
+    if (!user) return
+    supabase
+      .from('profiles')
+      .select('name')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data: profile }) => {
+        setDisplayName(profile?.name || user.email || '')
+      })
+  }, [user])
+
+  const userInitial = displayName
+    ? displayName[0].toUpperCase()
+    : (user?.email?.[0] ?? '?').toUpperCase()
+
+  const onLogoClick = () => navigate(user ? '/dashboard' : '/')
 
   const DarkBtn = (
     <button onClick={toggle} style={darkBtnStyle} title={dark ? 'עבור למצב בהיר' : 'עבור למצב כהה'}>
@@ -117,13 +131,12 @@ export default function Navbar({ variant = 'landing', userName = 'שיר' }) {
   /* ── Dashboard: full action bar ──────────────────────────── */
   if (variant === 'dashboard') {
     return (
-      <>
-        <nav className="nav-shell" style={{ ...shell, justifyContent: 'space-between' }}>
+      <nav className="nav-shell" style={{ ...shell, justifyContent: 'space-between' }}>
           <Logomark onClick={onLogoClick} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button
               className="nav-hide-mobile"
-              onClick={() => setComingSoon(true)}
+              onClick={() => window.dispatchEvent(new CustomEvent('openAddContact'))}
               style={{
                 padding: '9px var(--space-4)',
                 borderRadius: 'var(--radius-sm)',
@@ -133,6 +146,18 @@ export default function Navbar({ variant = 'landing', userName = 'שיר' }) {
                 boxShadow: '0 1px 2px rgba(99,102,241,.4)',
               }}
             >+ הוסף איש קשר</button>
+            <button
+              className="nav-hide-mobile"
+              onClick={() => navigate('/contacts')}
+              style={{
+                padding: '9px var(--space-3)',
+                borderRadius: 'var(--radius-sm)',
+                background: 'transparent',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-text-muted)',
+                fontWeight: 600, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
+              }}
+            >אנשי קשר</button>
             <button
               className="nav-hide-mobile"
               onClick={() => navigate('/settings')}
@@ -147,15 +172,21 @@ export default function Navbar({ variant = 'landing', userName = 'שיר' }) {
             >הגדרות</button>
             {DarkBtn}
             <button
-              onClick={() => navigate('/')}
+              onClick={async () => {
+                await supabase.auth.signOut({ scope: 'local' })
+                window.localStorage.clear()
+                window.sessionStorage.clear()
+                window.location.href = '/login'
+              }}
               style={{
                 padding: '9px var(--space-3)',
                 borderRadius: 'var(--radius-sm)',
-                background: 'transparent', border: 'none',
+                background: 'transparent',
+                border: '1px solid var(--color-error)',
                 color: 'var(--color-error)',
-                fontWeight: 600, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
+                fontWeight: 700, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
               }}
-            >יציאה</button>
+            >התנתק</button>
             <div
               onClick={() => navigate('/settings')}
               style={{
@@ -168,57 +199,6 @@ export default function Navbar({ variant = 'landing', userName = 'שיר' }) {
             >{userInitial}</div>
           </div>
         </nav>
-
-        {/* Coming-soon modal */}
-        {comingSoon && (
-          <div
-            onClick={() => setComingSoon(false)}
-            style={{
-              position: 'fixed', inset: 0,
-              background: 'rgba(0,0,0,.5)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 100,
-            }}
-          >
-            <div
-              onClick={e => e.stopPropagation()}
-              style={{
-                background: 'var(--color-surface)',
-                borderRadius: 'var(--radius-modal)',
-                padding: 'var(--space-8)',
-                maxWidth: 340, width: '90%',
-                textAlign: 'center',
-                boxShadow: 'var(--shadow-modal)',
-              }}
-            >
-              <div style={{
-                width: 56, height: 56, borderRadius: 'var(--radius-md)',
-                background: 'var(--color-secondary)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto var(--space-4)',
-                fontSize: 24,
-              }}>🎂</div>
-              <h3 style={{ fontWeight: 800, fontSize: 'var(--font-size-page-title-min)', margin: '0 0 var(--space-2)', color: 'var(--color-text-primary)' }}>
-                בקרוב!
-              </h3>
-              <p style={{ fontSize: 'var(--font-size-body-min)', color: 'var(--color-text-muted)', margin: '0 0 var(--space-6)', lineHeight: 'var(--line-height-body)' }}>
-                האפשרות להוסיף אנשי קשר תהיה זמינה בקרוב.
-              </p>
-              <button
-                onClick={() => setComingSoon(false)}
-                style={{
-                  width: '100%', padding: '11px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'var(--color-primary)', color: 'var(--color-surface)',
-                  fontWeight: 700, fontSize: 'var(--font-size-body-min)',
-                  border: 'none', cursor: 'pointer',
-                  boxShadow: 'var(--shadow-btn-primary)',
-                }}
-              >סגור</button>
-            </div>
-          </div>
-        )}
-      </>
     )
   }
 

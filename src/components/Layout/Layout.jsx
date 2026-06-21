@@ -8,16 +8,20 @@ const navVariant = {
   '/register':       'login',
   '/dashboard':      'dashboard',
   '/edit-greeting':  'edit',
-  '/settings':       'settings',
+  '/settings':          'settings',
+  '/greeting-history':  'edit',
+  '/contacts':          'dashboard',
 }
 
 const pageBg = {
-  '/':               'var(--color-surface)',
-  '/login':          'var(--color-bg)',
-  '/register':       'var(--color-bg)',
-  '/dashboard':      'var(--color-bg)',
-  '/edit-greeting':  'var(--color-bg)',
-  '/settings':       'var(--color-bg)',
+  '/':                  'var(--color-surface)',
+  '/login':             'var(--color-bg)',
+  '/register':          'var(--color-bg)',
+  '/dashboard':         'var(--color-bg)',
+  '/edit-greeting':     'var(--color-bg)',
+  '/settings':          'var(--color-bg)',
+  '/greeting-history':  'var(--color-bg)',
+  '/contacts':          'var(--color-bg)',
 }
 
 export default function Layout() {
