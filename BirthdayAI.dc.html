@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>html,body{margin:0;padding:0}*{box-sizing:border-box}button,input{font-family:inherit}</style>
+</helmet>
+<div style="width:100%;min-height:100vh;font-family:Inter,system-ui,sans-serif;background:#F3F4F6;">
+
+  <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
+    <div dir="rtl" style="width:100%;min-height:100vh;background:#F3F4F6;box-sizing:border-box;padding:44px 32px 72px;">
+      <div style="max-width:1120px;margin:0 auto;">
+        <div style="display:flex;align-items:center;gap:10px;direction:ltr;width:max-content;">
+          <div style="width:34px;height:34px;border-radius:10px;background:#6366F1;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(99,102,241,.35);"><div style="width:14px;height:14px;border-radius:4px;background:#fff;"></div></div>
+          <span style="font-weight:800;font-size:20px;letter-spacing:-.02em;color:#111827;">BirthdayAI</span>
+        </div>
+        <h1 style="font-size:28px;font-weight:800;letter-spacing:-.02em;margin:20px 0 6px;color:#111827;">פרוטוטייפ אינטראקטיבי</h1>
+        <p style="color:#6B7280;font-size:15px;margin:0 0 36px;">ארבעה מסכים עם זרימה מלאה — אימות התחברות, הוספת אנשי קשר, עריכת ברכה ושליחה. לחץ על מסך כדי להיכנס ולנסות.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:32px;">
+
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:center;gap:8px;"><span style="width:22px;height:22px;border-radius:7px;background:#6366F1;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;direction:ltr;">1</span><span style="font-size:14px;font-weight:700;color:#374151;">עמוד נחיתה</span></div>
+            <div onClick="{{ enterLanding }}" style="width:300px;height:230px;overflow:hidden;border-radius:14px;background:#fff;box-shadow:0 4px 16px -4px rgba(17,24,39,.18);border:1px solid #E5E7EB;cursor:pointer;" style-hover="box-shadow:0 14px 34px -8px rgba(99,102,241,.4);border-color:#C7D2FE;">
+              <div style="width:1200px;transform:scale(.25);transform-origin:top left;pointer-events:none;"><dc-import name="Landing" hint-size="1200px,920px"></dc-import></div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:center;gap:8px;"><span style="width:22px;height:22px;border-radius:7px;background:#6366F1;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;direction:ltr;">2</span><span style="font-size:14px;font-weight:700;color:#374151;">התחברות</span></div>
+            <div onClick="{{ enterLogin }}" style="width:300px;height:230px;overflow:hidden;border-radius:14px;background:#fff;box-shadow:0 4px 16px -4px rgba(17,24,39,.18);border:1px solid #E5E7EB;cursor:pointer;" style-hover="box-shadow:0 14px 34px -8px rgba(99,102,241,.4);border-color:#C7D2FE;">
+              <div style="width:1200px;transform:scale(.25);transform-origin:top left;pointer-events:none;"><dc-import name="Login" hint-size="1200px,920px"></dc-import></div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:center;gap:8px;"><span style="width:22px;height:22px;border-radius:7px;background:#6366F1;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;direction:ltr;">3</span><span style="font-size:14px;font-weight:700;color:#374151;">דשבורד</span></div>
+            <div onClick="{{ enterDashboard }}" style="width:300px;height:230px;overflow:hidden;border-radius:14px;background:#fff;box-shadow:0 4px 16px -4px rgba(17,24,39,.18);border:1px solid #E5E7EB;cursor:pointer;" style-hover="box-shadow:0 14px 34px -8px rgba(99,102,241,.4);border-color:#C7D2FE;">
+              <div style="width:1200px;transform:scale(.25);transform-origin:top left;pointer-events:none;"><dc-import name="Dashboard" contacts="{{ contacts }}" stats="{{ stats }}" activity="{{ activity }}" empty="{{ empty }}" not-empty="{{ notEmpty }}" toggle-label="{{ toggleLabel }}" user-name="{{ userName }}" upcoming-count="{{ upcomingCount }}" hint-size="1200px,920px"></dc-import></div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:center;gap:8px;"><span style="width:22px;height:22px;border-radius:7px;background:#6366F1;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;direction:ltr;">4</span><span style="font-size:14px;font-weight:700;color:#374151;">עריכת ברכה</span></div>
+            <div onClick="{{ enterEdit }}" style="width:300px;height:230px;overflow:hidden;border-radius:14px;background:#fff;box-shadow:0 4px 16px -4px rgba(17,24,39,.18);border:1px solid #E5E7EB;cursor:pointer;" style-hover="box-shadow:0 14px 34px -8px rgba(99,102,241,.4);border-color:#C7D2FE;">
+              <div style="width:1200px;transform:scale(.25);transform-origin:top left;pointer-events:none;"><dc-import name="EditGreeting" contact="{{ selContact }}" greeting="{{ greeting }}" count="{{ count }}" max="{{ max }}" count-style="{{ countStyle }}" channel-label="{{ channelLabel }}" wa-style="{{ waStyle }}" email-style="{{ emailStyle }}" sent="{{ false }}" hint-size="1200px,920px"></dc-import></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isApp }}" hint-placeholder-val="{{ false }}">
+    <div style="width:100%;min-height:100vh;">
+      <sc-if value="{{ isLanding }}" hint-placeholder-val="{{ false }}"><dc-import name="Landing" on-start="{{ goStart }}" on-login="{{ goLogin }}" on-see-how="{{ goDashboard }}" hint-size="100%,920px"></dc-import></sc-if>
+      <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}"><dc-import name="Login" on-success="{{ onLoginSuccess }}" on-register="{{ onRegister }}" hint-size="100%,640px"></dc-import></sc-if>
+      <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ false }}"><dc-import name="Dashboard" contacts="{{ contacts }}" stats="{{ stats }}" activity="{{ activity }}" empty="{{ empty }}" not-empty="{{ notEmpty }}" toggle-label="{{ toggleLabel }}" user-name="{{ userName }}" upcoming-count="{{ upcomingCount }}" on-add="{{ onAdd }}" on-toggle-empty="{{ onToggleEmpty }}" on-edit="{{ onEdit }}" on-send="{{ onSend }}" hint-size="100%,820px"></dc-import></sc-if>
+      <sc-if value="{{ isEdit }}" hint-placeholder-val="{{ false }}"><dc-import name="EditGreeting" contact="{{ selContact }}" greeting="{{ greeting }}" count="{{ count }}" max="{{ max }}" count-style="{{ countStyle }}" channel-label="{{ channelLabel }}" wa-style="{{ waStyle }}" email-style="{{ emailStyle }}" sent="{{ sent }}" on-greeting-change="{{ onGreetingChange }}" on-regenerate="{{ onRegenerate }}" on-wa="{{ onWa }}" on-email="{{ onEmail }}" on-send="{{ onSend2 }}" on-save="{{ onSave }}" on-cancel="{{ onCancel }}" on-back="{{ onBack }}" hint-size="100%,820px"></dc-import></sc-if>
+
+      <div dir="rtl" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:5px;background:rgba(17,24,39,.92);backdrop-filter:blur(8px);padding:6px;border-radius:999px;box-shadow:0 8px 30px rgba(0,0,0,.32);">
+        <button onClick="{{ backToOverview }}" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#374151;color:#fff;border:none;font-size:13px;font-weight:600;cursor:pointer;">⌂ תצוגה כללית</button>
+        <button onClick="{{ navLanding }}" style="{{ chipLandingStyle }}">נחיתה</button>
+        <button onClick="{{ navLogin }}" style="{{ chipLoginStyle }}">כניסה</button>
+        <button onClick="{{ navDash }}" style="{{ chipDashStyle }}">דשבורד</button>
+        <button onClick="{{ navEdit }}" style="{{ chipEditStyle }}">עריכה</button>
+      </div>
+
+      <sc-if value="{{ showAdd }}" hint-placeholder-val="{{ false }}">
+        <div dir="rtl" onClick="{{ closeAdd }}" style="position:fixed;inset:0;background:rgba(17,24,39,.45);backdrop-filter:blur(2px);z-index:70;display:flex;align-items:center;justify-content:center;padding:20px;">
+          <div onClick="{{ stop }}" style="background:#fff;border-radius:16px;padding:28px;width:100%;max-width:420px;box-shadow:0 24px 60px -12px rgba(0,0,0,.4);font-family:Inter,system-ui,sans-serif;">
+            <h3 style="font-size:19px;font-weight:800;margin:0 0 4px;color:#111827;">הוספת איש קשר</h3>
+            <p style="color:#6B7280;font-size:14px;margin:0 0 20px;">BirthdayAI יזכיר לך וישלח ברכה אוטומטית בזמן.</p>
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#111827;">שם מלא</label>
+            <input value="{{ addForm.name }}" onChange="{{ onAddName }}" placeholder="לדוגמה: רון כהן" style="width:100%;box-sizing:border-box;padding:11px 13px;border-radius:8px;border:1.5px solid #E5E7EB;font-size:15px;outline:none;color:#111827;">
+            <div style="height:14px;"></div>
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#111827;">קשר</label>
+            <input value="{{ addForm.relationship }}" onChange="{{ onAddRel }}" placeholder="לדוגמה: חבר/ה, אח/ות" style="width:100%;box-sizing:border-box;padding:11px 13px;border-radius:8px;border:1.5px solid #E5E7EB;font-size:15px;outline:none;color:#111827;">
+            <div style="height:14px;"></div>
+            <div style="display:flex;gap:12px;">
+              <div style="flex:1;"><label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#111827;">תאריך</label><input value="{{ addForm.dateLabel }}" onChange="{{ onAddDate }}" placeholder="14 ביולי" style="width:100%;box-sizing:border-box;padding:11px 13px;border-radius:8px;border:1.5px solid #E5E7EB;font-size:15px;outline:none;color:#111827;"></div>
+              <div style="width:110px;"><label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#111827;">בעוד (ימים)</label><input value="{{ addForm.days }}" onChange="{{ onAddDays }}" type="number" style="width:100%;box-sizing:border-box;padding:11px 13px;border-radius:8px;border:1.5px solid #E5E7EB;font-size:15px;outline:none;color:#111827;"></div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:24px;">
+              <button onClick="{{ submitAdd }}" style="flex:1;padding:12px;border-radius:8px;background:#6366F1;color:#fff;font-weight:700;font-size:15px;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(99,102,241,.35);">הוסף איש קשר</button>
+              <button onClick="{{ closeAdd }}" style="padding:12px 20px;border-radius:8px;background:transparent;color:#6B7280;font-weight:600;font-size:15px;border:none;cursor:pointer;">ביטול</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ toastMsg }}" hint-placeholder-val="{{ false }}">
+        <div dir="rtl" style="position:fixed;bottom:84px;left:50%;transform:translateX(-50%);z-index:80;background:#111827;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.3);font-family:Inter,system-ui,sans-serif;">{{ toastMsg }}</div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:900},&quot;startView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;overview&quot;,&quot;landing&quot;,&quot;login&quot;,&quot;dashboard&quot;,&quot;edit&quot;],&quot;default&quot;:&quot;overview&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;שיר&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;maxChars&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:280,&quot;min&quot;:120,&quot;max&quot;:500,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  rawContacts = [
+    { id: 'c1', name: 'דנה לוי', first: 'דנה', initial: 'ד', bg: '#EEF2FF', fg: '#6366F1', relationship: 'אחות', dateLabel: '19 ביוני', days: 0, hobbies: ['יוגה', 'צילום'] },
+    { id: 'c2', name: 'יוסי כהן', first: 'יוסי', initial: 'י', bg: '#FEF3C7', fg: '#D97706', relationship: 'חבר מהצבא', dateLabel: '22 ביוני', days: 3, hobbies: ['כדורגל', 'גיטרה'] },
+    { id: 'c3', name: 'מיכל אברהם', first: 'מיכל', initial: 'מ', bg: '#DCFCE7', fg: '#16A34A', relationship: 'קולגה', dateLabel: '27 ביוני', days: 8, hobbies: ['ריצה', 'בישול'] },
+    { id: 'c4', name: 'אבי פרידמן', first: 'אבי', initial: 'א', bg: '#FCE7F3', fg: '#DB2777', relationship: 'אבא', dateLabel: '1 ביולי', days: 12, hobbies: ['גינון', 'שחמט'] },
+    { id: 'c5', name: 'נועה שפירא', first: 'נועה', initial: 'נ', bg: '#E0F2FE', fg: '#0284C7', relationship: 'בת דודה', dateLabel: '8 ביולי', days: 19, hobbies: ['ציור', 'טיולים'] },
+  ];
+  palette = [['#EEF2FF', '#6366F1'], ['#FEF3C7', '#D97706'], ['#DCFCE7', '#16A34A'], ['#FCE7F3', '#DB2777'], ['#E0F2FE', '#0284C7']];
+  state = {
+    view: 'overview', screen: 'landing', emptyDash: false,
+    selectedId: 'c1', greetIdx: 0, channel: 'whatsapp', greeting: '', sent: false,
+    toast: '', showAdd: false, addForm: { name: '', relationship: '', dateLabel: '', days: 7 },
+    contacts: this.rawContacts,
+    stats: { contacts: 24, month: 6, sent: 142 },
+    activity: [
+      { id: 'a1', text: 'נשלחה ברכה לרותם ישראלי', meta: 'WhatsApp · לפני יומיים', color: '#6366F1' },
+      { id: 'a2', text: 'נשלחה ברכה לתמר גולן', meta: 'Email · לפני 4 ימים', color: '#10B981' },
+      { id: 'a3', text: 'נוסף איש קשר חדש — שיר בן דוד', meta: 'לפני שבוע', color: '#F59E0B' },
+    ],
+  };
+
+  componentDidMount() {
+    const sel = this.curSel();
+    const extra = { greeting: this.greetingFor(sel, 0) };
+    const sv = this.props.startView;
+    if (sv && sv !== 'overview') { extra.view = 'app'; extra.screen = sv; }
+    this.setState(extra);
+  }
+
+  greetingFor(c, i) {
+    if (!c) return '';
+    const h1 = c.hobbies[0] || '', h2 = c.hobbies[1] || c.hobbies[0] || '';
+    const t = [
+      `${c.first}, מזל טוב ליום ההולדת! 🎉 מאחל לך שנה מלאה באושר, בריאות והגשמה — והרבה רגעים יפים של ${h1} ו${h2}. חוגגים אותך! ❤️`,
+      `${c.first} היקר/ה, ביום הולדתך מתחשק לי לאחל לך שנה פשוט מדהימה. שתמשיך/י ליהנות מ${h1} ומכל מה שעושה לך טוב. כל הכבוד על מי שאת/ה — מזל טוב! 🥳`,
+      `מזל טוב ${c.first}! 🎂 שתהיה לך שנה של בריאות, אהבה והמון רגעים מאושרים. שתמיד תמצא/י זמן ל${h1} ול${h2}. שתהיה שנה נהדרת!`,
+    ];
+    return t[i % 3];
+  }
+
+  curSel() { return this.state.contacts.find(c => c.id === this.state.selectedId) || this.state.contacts[0]; }
+
+  display() {
+    return this.state.contacts.map(c => ({
+      ...c,
+      today: c.days === 0,
+      notToday: c.days !== 0,
+      daysLabel: c.days === 0 ? '' : ('בעוד ' + c.days + ' ימים'),
+      avatarStyle: `width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;background:${c.bg};color:${c.fg};flex:none;`,
+      avatarStyleLg: `width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;background:${c.bg};color:${c.fg};flex:none;`,
+      cardStyle: c.days === 0
+        ? 'display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:12px;border:1.5px solid #C7D2FE;background:#fff;box-shadow:0 4px 14px -4px rgba(99,102,241,.25);'
+        : 'display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:12px;border:1px solid #EEF0F3;background:#fff;',
+    }));
+  }
+
+  go(screen) { this.setState({ view: 'app', screen, sent: screen === 'edit' ? this.state.sent : false, showAdd: false }); }
+  enterPlain(screen) { this.setState({ view: 'app', screen, sent: false, showAdd: false }); }
+  backToOverview = () => this.setState({ view: 'overview', showAdd: false });
+  openEdit(id) {
+    const c = this.state.contacts.find(x => x.id === id) || this.state.contacts[0];
+    this.setState({ view: 'app', screen: 'edit', selectedId: id, greetIdx: 0, greeting: this.greetingFor(c, 0), sent: false, showAdd: false });
+  }
+  sendGreeting() {
+    const c = this.curSel();
+    const ch = this.state.channel === 'whatsapp' ? 'WhatsApp' : 'Email';
+    this.setState(s => ({ sent: true, stats: { ...s.stats, sent: s.stats.sent + 1 }, activity: [{ id: 'a' + Date.now(), text: 'נשלחה ברכה ל' + c.name, meta: ch + ' · עכשיו', color: '#10B981' }, ...s.activity] }));
+  }
+  toast(msg) { this.setState({ toast: msg }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: '' }), 2400); }
+  field(k) { return (e) => { const v = k === 'days' ? (parseInt(e.target.value || '0', 10) || 0) : e.target.value; this.setState(s => ({ addForm: { ...s.addForm, [k]: v } })); }; }
+  submitAdd = () => {
+    const f = this.state.addForm;
+    if (!f.name.trim()) { this.toast('נא להזין שם'); return; }
+    const cl = this.palette[this.state.contacts.length % this.palette.length];
+    const nc = { id: 'c' + Date.now(), name: f.name.trim(), first: f.name.trim().split(' ')[0], initial: f.name.trim()[0], bg: cl[0], fg: cl[1], relationship: f.relationship || 'חבר/ה', dateLabel: f.dateLabel || 'בקרוב', days: Number(f.days) || 7, hobbies: ['—'] };
+    this.setState(s => ({ contacts: [...s.contacts, nc].sort((a, b) => a.days - b.days), showAdd: false, addForm: { name: '', relationship: '', dateLabel: '', days: 7 }, stats: { ...s.stats, contacts: s.stats.contacts + 1, month: s.stats.month + 1 } }));
+    this.toast('איש הקשר נוסף בהצלחה');
+  };
+
+  renderVals() {
+    const dc = this.display();
+    const sel = dc.find(c => c.id === this.state.selectedId) || dc[0];
+    const max = this.props.maxChars ?? 280;
+    const count = this.state.greeting.length;
+    const channel = this.state.channel;
+    const cb = 'flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;';
+    const on = 'border:2px solid #6366F1;background:#EEF2FF;color:#4F46E5;';
+    const off = 'border:1px solid #E5E7EB;background:#fff;color:#6B7280;';
+    const chip = (n) => 'padding:8px 14px;border-radius:999px;border:none;font-size:13px;font-weight:600;cursor:pointer;' + (this.state.screen === n ? 'background:#6366F1;color:#fff;' : 'background:transparent;color:#9CA3AF;');
+    const stats = this.state.emptyDash ? { contacts: 0, month: 0, sent: 0 } : this.state.stats;
+    return {
+      isOverview: this.state.view === 'overview',
+      isApp: this.state.view === 'app',
+      isLanding: this.state.screen === 'landing',
+      isLogin: this.state.screen === 'login',
+      isDashboard: this.state.screen === 'dashboard',
+      isEdit: this.state.screen === 'edit',
+      enterLanding: () => this.enterPlain('landing'),
+      enterLogin: () => this.enterPlain('login'),
+      enterDashboard: () => this.enterPlain('dashboard'),
+      enterEdit: () => this.openEdit(this.state.selectedId),
+      backToOverview: this.backToOverview,
+      navLanding: () => this.go('landing'),
+      navLogin: () => this.go('login'),
+      navDash: () => this.go('dashboard'),
+      navEdit: () => this.openEdit(this.state.selectedId),
+      chipLandingStyle: chip('landing'), chipLoginStyle: chip('login'), chipDashStyle: chip('dashboard'), chipEditStyle: chip('edit'),
+      goStart: () => this.go('login'),
+      goLogin: () => this.go('login'),
+      goDashboard: () => this.go('dashboard'),
+      onLoginSuccess: () => this.go('dashboard'),
+      onRegister: () => this.go('dashboard'),
+      contacts: this.state.emptyDash ? [] : dc,
+      stats,
+      activity: (this.state.emptyDash ? [] : this.state.activity).map(a => ({ ...a, dotStyle: `width:8px;height:8px;border-radius:50%;background:${a.color};margin-top:5px;flex:none;` })),
+      userName: this.props.userName ?? 'שיר',
+      upcomingCount: dc.filter(c => c.days <= 30).length,
+      empty: this.state.emptyDash,
+      notEmpty: !this.state.emptyDash,
+      toggleLabel: this.state.emptyDash ? 'תצוגה רגילה' : 'תצוגת משתמש חדש',
+      onAdd: () => this.setState({ showAdd: true }),
+      onToggleEmpty: () => this.setState(s => ({ emptyDash: !s.emptyDash })),
+      onEdit: (c) => this.openEdit(c.id),
+      onSend: (c) => this.openEdit(c.id),
+      selContact: sel,
+      greeting: this.state.greeting,
+      count, max,
+      countStyle: `font-size:13px;font-weight:600;color:${count > max ? '#EF4444' : '#9CA3AF'};`,
+      channelLabel: channel === 'whatsapp' ? 'WhatsApp' : 'Email',
+      waStyle: cb + (channel === 'whatsapp' ? on : off),
+      emailStyle: cb + (channel === 'email' ? on : off),
+      onGreetingChange: (e) => this.setState({ greeting: e.target.value }),
+      onRegenerate: () => this.setState(s => { const ni = (s.greetIdx + 1) % 3; return { greetIdx: ni, greeting: this.greetingFor(this.curSel(), ni) }; }),
+      onWa: () => this.setState({ channel: 'whatsapp' }),
+      onEmail: () => this.setState({ channel: 'email' }),
+      onSend2: () => this.sendGreeting(),
+      onSave: () => this.toast('הטיוטה נשמרה'),
+      onCancel: () => this.go('dashboard'),
+      onBack: () => this.go('dashboard'),
+      sent: this.state.sent,
+      showAdd: this.state.showAdd,
+      addForm: this.state.addForm,
+      onAddName: this.field('name'), onAddRel: this.field('relationship'), onAddDate: this.field('dateLabel'), onAddDays: this.field('days'),
+      submitAdd: this.submitAdd,
+      closeAdd: () => this.setState({ showAdd: false }),
+      stop: (e) => e.stopPropagation(),
+      toastMsg: this.state.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>

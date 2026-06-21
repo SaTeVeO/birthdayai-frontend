@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}button,input{font-family:inherit}</style>
+</helmet>
+<div dir="rtl" style="width:100%;min-height:100%;font-family:Inter,system-ui,sans-serif;background:#F3F4F6;color:#111827;display:flex;flex-direction:column;">
+
+  <div style="height:64px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #EEF0F3;background:#fff;">
+    <div style="display:flex;align-items:center;gap:10px;direction:ltr;">
+      <div style="width:32px;height:32px;border-radius:9px;background:#6366F1;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(99,102,241,.35);"><div style="width:13px;height:13px;border-radius:4px;background:#fff;"></div></div>
+      <span style="font-weight:800;font-size:18px;letter-spacing:-.02em;">BirthdayAI</span>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:48px 20px;">
+    <div style="width:100%;max-width:400px;">
+      <div style="background:#fff;border:1px solid #EEF0F3;border-radius:16px;padding:32px;box-shadow:0 4px 20px -4px rgba(17,24,39,.12);">
+        <h1 style="font-size:23px;font-weight:800;margin:0 0 6px;text-align:center;letter-spacing:-.02em;">כניסה לחשבון</h1>
+        <p style="text-align:center;color:#6B7280;font-size:14px;margin:0 0 24px;">היכנס כדי לנהל את ימי ההולדת שלך</p>
+
+        <sc-if value="{{ showError }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:8px;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:16px;">
+            <span style="width:16px;height:16px;border-radius:50%;background:#EF4444;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;flex:none;">!</span>{{ errorMsg }}
+          </div>
+        </sc-if>
+
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">אימייל</label>
+        <input value="{{ email }}" onChange="{{ onEmail }}" type="email" placeholder="name@email.com" dir="ltr" style="{{ emailStyle }}">
+        <div style="height:16px;"></div>
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">סיסמה</label>
+        <input value="{{ password }}" onChange="{{ onPass }}" type="password" placeholder="••••••••" dir="ltr" style="{{ passStyle }}">
+        <div style="height:22px;"></div>
+
+        <button onClick="{{ submit }}" style="width:100%;padding:13px;border-radius:8px;background:#6366F1;color:#fff;font-weight:700;font-size:15px;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(99,102,241,.35);" style-hover="background:#4F46E5;">כניסה</button>
+
+        <div style="display:flex;align-items:center;gap:12px;margin:18px 0;"><div style="flex:1;height:1px;background:#E5E7EB;"></div><span style="font-size:12px;color:#9CA3AF;">או</span><div style="flex:1;height:1px;background:#E5E7EB;"></div></div>
+
+        <button onClick="{{ googleLogin }}" style="width:100%;padding:12px;border-radius:8px;background:#fff;border:1px solid #E5E7EB;color:#374151;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;" style-hover="background:#FAFAFA;">
+          <span style="width:18px;height:18px;border-radius:50%;background:conic-gradient(#EA4335,#FBBC05,#34A853,#4285F4);flex:none;"></span>המשך עם Google
+        </button>
+      </div>
+      <p style="text-align:center;font-size:14px;color:#6B7280;margin:20px 0 0;">אין לך חשבון? <span onClick="{{ onRegister }}" style="color:#6366F1;font-weight:700;cursor:pointer;">הרשמה</span></p>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:620}}">
+class Component extends DCLogic {
+  state = { email: '', password: '', touched: false };
+  set(k) { return (e) => this.setState({ [k]: e.target.value }); }
+  submit = () => {
+    const { email, password } = this.state;
+    const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+    const passOk = password.length >= 6;
+    if (emailOk && passOk) { this.props.onSuccess && this.props.onSuccess(); return; }
+    this.setState({ touched: true });
+  };
+  renderVals() {
+    const { email, password, touched } = this.state;
+    const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+    const passOk = password.length >= 6;
+    const emailErr = touched && !emailOk;
+    const passErr = touched && !passOk;
+    const base = 'width:100%;box-sizing:border-box;padding:12px 14px;border-radius:8px;font-size:15px;outline:none;transition:border .15s;background:#fff;color:#111827;';
+    const err = 'border:1.5px solid #EF4444;box-shadow:0 0 0 3px rgba(239,68,68,.12);';
+    const ok = 'border:1.5px solid #E5E7EB;';
+    return {
+      email, password,
+      onEmail: this.set('email'),
+      onPass: this.set('password'),
+      submit: this.submit,
+      googleLogin: () => this.props.onSuccess && this.props.onSuccess(),
+      onRegister: this.props.onRegister,
+      showError: emailErr || passErr,
+      errorMsg: (emailErr && passErr) ? 'נא להזין כתובת אימייל וסיסמה תקינות'
+        : emailErr ? 'כתובת האימייל אינה תקינה'
+        : 'הסיסמה חייבת להכיל לפחות 6 תווים',
+      emailStyle: base + (emailErr ? err : ok),
+      passStyle: base + (passErr ? err : ok),
+    };
+  }
+}
+</script>
+</body>
+</html>

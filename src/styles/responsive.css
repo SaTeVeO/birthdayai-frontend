@@ -1,0 +1,180 @@
+/* BirthdayAI — Responsive overrides (≤ 768 px) */
+
+@media (max-width: 768px) {
+
+  /* ── Override design tokens for mobile ───────────────── */
+  :root {
+    --font-size-body-min: 16px;  /* raise minimum body text to 16 px */
+  }
+
+  /* ── Prevent horizontal overflow everywhere ──────────── */
+  body { overflow-x: hidden; }
+
+  /* ════════════════════════════════════════════════════════
+     NAVBAR
+     ════════════════════════════════════════════════════════ */
+
+  /* Tighten horizontal padding */
+  .nav-shell { padding: 0 var(--space-4) !important; }
+
+  /* Hide secondary dashboard action buttons on narrow screens.
+     Users reach Settings via the avatar; "+ הוסף" is "בקרוב!" anyway. */
+  .nav-hide-mobile { display: none !important; }
+
+
+  /* ════════════════════════════════════════════════════════
+     LANDING PAGE
+     ════════════════════════════════════════════════════════ */
+
+  /* Hero section: reduce vertical breathing room */
+  .landing-hero {
+    padding: 48px var(--space-4) var(--space-6) !important;
+  }
+
+  /* Scale down the 56 px display heading */
+  .landing-h1 {
+    font-size: 30px !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  /* Hero paragraph: tighten margin */
+  .landing-hero p {
+    margin-bottom: var(--space-6) !important;
+  }
+
+  /* Hero CTA buttons: stack vertically */
+  .landing-cta-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .landing-cta-row button {
+    width: 100% !important;
+  }
+
+  /* Preview card section: less horizontal padding */
+  .landing-preview {
+    padding: 0 var(--space-4) 40px !important;
+  }
+
+  /* Features section: less padding */
+  .features-section {
+    padding: 40px var(--space-4) !important;
+  }
+  .features-section h2 {
+    font-size: 26px !important;
+  }
+
+  /* Three-column feature grid → single column */
+  .features-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* CTA band section: tighter wrapper padding */
+  .cta-section {
+    padding: 40px var(--space-4) !important;
+  }
+
+  /* CTA band card: reduced inner padding */
+  .cta-band {
+    padding: var(--space-8) var(--space-4) !important;
+    border-radius: var(--radius-lg) !important;
+  }
+  .cta-band h2 {
+    font-size: 24px !important;
+  }
+  .cta-band p {
+    font-size: 16px !important;
+  }
+
+
+  /* ════════════════════════════════════════════════════════
+     LOGIN / REGISTER
+     ════════════════════════════════════════════════════════ */
+
+  /* Outer flex container: smaller vertical padding */
+  .auth-outer {
+    padding: 32px var(--space-3) !important;
+  }
+
+  /* Card: tighter padding */
+  .auth-card {
+    padding: var(--space-5) !important;
+  }
+
+
+  /* ════════════════════════════════════════════════════════
+     DASHBOARD
+     ════════════════════════════════════════════════════════ */
+
+  /* Page padding */
+  .dashboard-main {
+    padding: var(--space-4) !important;
+  }
+
+  /* Two-column grid (contacts | sidebar) → single column.
+     Sidebar naturally stacks below the contact list. */
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Contact card: let it wrap so the action button doesn't
+     overflow on very narrow widths */
+  .contact-card {
+    flex-wrap: wrap !important;
+    gap: var(--space-3) !important;
+  }
+  .contact-card-right {
+    flex-direction: row !important;
+    width: 100% !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+
+
+  /* ════════════════════════════════════════════════════════
+     EDIT GREETING
+     ════════════════════════════════════════════════════════ */
+
+  .edit-main {
+    padding: var(--space-4) !important;
+  }
+
+  /* Channel selector: stack buttons vertically */
+  .channel-btns {
+    flex-direction: column !important;
+  }
+  .channel-btns > button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Action row (Send / Save draft / Cancel) → vertical stack */
+  .edit-actions {
+    flex-direction: column !important;
+  }
+  .edit-actions > button {
+    width: 100% !important;
+    flex: unset !important;
+    min-width: unset !important;
+  }
+
+
+  /* ════════════════════════════════════════════════════════
+     SETTINGS
+     ════════════════════════════════════════════════════════ */
+
+  .settings-main {
+    padding: var(--space-4) !important;
+  }
+
+  /* Reminder-day toggle group: wrap if needed */
+  .toggle-group {
+    flex-wrap: wrap !important;
+  }
+  .toggle-group > button {
+    flex: 1 !important;
+    min-width: 80px !important;
+    justify-content: center !important;
+  }
+
+}

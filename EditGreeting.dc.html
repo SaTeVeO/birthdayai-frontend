@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}button,textarea{font-family:inherit}</style>
+</helmet>
+<div dir="rtl" style="width:100%;min-height:100%;font-family:Inter,system-ui,sans-serif;background:#F3F4F6;color:#111827;">
+
+  <div style="height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;border-bottom:1px solid #EEF0F3;background:#fff;position:sticky;top:0;z-index:20;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <button onClick="{{ onBack }}" style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;background:transparent;border:1px solid #E5E7EB;color:#374151;font-weight:600;font-size:14px;cursor:pointer;" style-hover="background:#F9FAFB;">→ חזרה</button>
+      <span style="font-weight:700;font-size:15px;">עריכת ברכה</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;direction:ltr;">
+      <div style="width:32px;height:32px;border-radius:9px;background:#6366F1;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(99,102,241,.35);"><div style="width:13px;height:13px;border-radius:4px;background:#fff;"></div></div>
+      <span style="font-weight:800;font-size:18px;letter-spacing:-.02em;">BirthdayAI</span>
+    </div>
+  </div>
+
+  <div style="max-width:680px;margin:0 auto;padding:32px;">
+
+    <sc-if value="{{ sent }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:center;gap:12px;background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;padding:14px 16px;border-radius:12px;margin-bottom:20px;">
+        <span style="width:22px;height:22px;border-radius:50%;background:#10B981;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex:none;">✓</span>
+        <span style="font-weight:600;font-size:14px;">הברכה נשלחה בהצלחה אל {{ contact.first }} דרך {{ channelLabel }}!</span>
+      </div>
+    </sc-if>
+
+    <div style="background:#fff;border:1px solid #EEF0F3;border-radius:14px;padding:20px;display:flex;align-items:center;gap:16px;margin-bottom:16px;box-shadow:0 1px 3px rgba(17,24,39,.05);">
+      <div style="{{ contact.avatarStyleLg }}">{{ contact.initial }}</div>
+      <div style="flex:1;">
+        <span style="font-weight:800;font-size:19px;">{{ contact.name }}</span>
+        <div style="font-size:14px;color:#6B7280;margin-top:4px;">יום הולדת · {{ contact.dateLabel }} · {{ contact.relationship }}</div>
+        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+          <sc-for list="{{ contact.hobbies }}" as="h" hint-placeholder-count="2"><span style="font-size:12px;background:#F3F4F6;color:#374151;padding:4px 10px;border-radius:999px;">{{ h }}</span></sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#fff;border:1px solid #EEF0F3;border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(17,24,39,.05);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span style="font-weight:700;font-size:15px;">הברכה</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#4F46E5;background:#EEF2FF;padding:5px 10px;border-radius:999px;"><span style="width:6px;height:6px;border-radius:50%;background:#6366F1;"></span>נוצר ע״י AI</span>
+      </div>
+      <textarea value="{{ greeting }}" onChange="{{ onGreetingChange }}" style="width:100%;min-height:150px;box-sizing:border-box;border:1.5px solid #E5E7EB;border-radius:10px;padding:14px;font-size:15px;line-height:1.6;color:#111827;resize:vertical;outline:none;"></textarea>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;">
+        <button onClick="{{ onRegenerate }}" style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:8px;background:#fff;border:1px solid #E5E7EB;color:#374151;font-weight:600;font-size:14px;cursor:pointer;" style-hover="border-color:#C7D2FE;background:#FAFAFE;"><span style="width:7px;height:7px;border-radius:50%;background:#6366F1;"></span>צור ברכה מחדש</button>
+        <span style="{{ countStyle }}">{{ count }}/{{ max }}</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <div style="font-weight:700;font-size:14px;margin-bottom:10px;">ערוץ שליחה</div>
+      <div style="display:flex;gap:12px;">
+        <button onClick="{{ onWa }}" style="{{ waStyle }}"><span style="width:8px;height:8px;border-radius:50%;background:#25D366;"></span>WhatsApp</button>
+        <button onClick="{{ onEmail }}" style="{{ emailStyle }}"><span style="width:8px;height:8px;border-radius:50%;background:#6366F1;"></span>Email</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <button onClick="{{ onSend }}" style="flex:1;min-width:180px;padding:14px;border-radius:8px;background:#6366F1;color:#fff;font-weight:700;font-size:15px;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(99,102,241,.35);" style-hover="background:#4F46E5;">שלח ברכה עכשיו</button>
+      <button onClick="{{ onSave }}" style="padding:14px 20px;border-radius:8px;background:#EEF2FF;color:#4F46E5;font-weight:600;font-size:15px;border:none;cursor:pointer;">שמור טיוטה</button>
+      <button onClick="{{ onCancel }}" style="padding:14px 20px;border-radius:8px;background:transparent;color:#6B7280;font-weight:600;font-size:15px;border:none;cursor:pointer;">ביטול</button>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:820}}"></script>
+</body>
+</html>

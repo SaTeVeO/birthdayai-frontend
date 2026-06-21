@@ -1,0 +1,156 @@
+/* BirthdayAI — Design Tokens */
+
+:root {
+  /* ── Colors ─────────────────────────────────────────────── */
+  --color-primary:            #6366F1;
+  --color-primary-hover:      #4F46E5;
+  --color-secondary:          #EEF2FF;
+  --color-secondary-text:     #4F46E5;
+
+  --color-accent:             #F59E0B;
+  --color-accent-badge-bg:    #FEF3C7;
+  --color-accent-badge-text:  #B45309;
+
+  --color-bg:                 #F3F4F6;
+  --color-surface:            #FFFFFF;
+  --color-surface-subtle:     #F9FAFB;
+
+  --color-text-primary:       #111827;
+  --color-text-muted:         #6B7280;
+  --color-text-faint:         #9CA3AF;
+  --color-text-body:          #374151;
+
+  --color-border:             #E5E7EB;
+  --color-border-subtle:      #EEF0F3;
+  --color-border-highlight:   #C7D2FE;
+  --color-border-dashed:      #D1D5DB;
+  --color-border-error:       #FECACA;
+  --color-border-success:     #A7F3D0;
+
+  --color-error:              #EF4444;
+  --color-error-bg:           #FEF2F2;
+  --color-error-text:         #B91C1C;
+
+  --color-success:            #10B981;
+  --color-success-bg:         #ECFDF5;
+  --color-success-text:       #065F46;
+
+  --color-nav-glass:          rgba(255,255,255,.85);
+
+  /* ── Avatar monogram pairs (bg / text) ──────────────────── */
+  --avatar-1-bg:   #EEF2FF;  --avatar-1-text: #6366F1;
+  --avatar-2-bg:   #FEF3C7;  --avatar-2-text: #D97706;
+  --avatar-3-bg:   #DCFCE7;  --avatar-3-text: #16A34A;
+  --avatar-4-bg:   #FCE7F3;  --avatar-4-text: #DB2777;
+  --avatar-5-bg:   #E0F2FE;  --avatar-5-text: #0284C7;
+
+  /* ── Typography ─────────────────────────────────────────── */
+  --font-family:   Inter, system-ui, sans-serif;
+
+  /* Display H1 (hero) */
+  --font-size-hero:          56px;
+  --font-weight-hero:        800;
+  --letter-spacing-hero:     -0.03em;
+
+  /* Section H2 */
+  --font-size-h2:            34px;
+  --font-weight-h2:          800;
+  --letter-spacing-h2:       -0.02em;
+
+  /* Page title */
+  --font-size-page-title-min: 23px;
+  --font-size-page-title-max: 26px;
+  --font-weight-page-title:   800;
+  --letter-spacing-page-title: -0.02em;
+
+  /* Card title */
+  --font-size-card-title-min: 16px;
+  --font-size-card-title-max: 19px;
+  --font-weight-card-title:   700;
+
+  /* Body */
+  --font-size-body-min:  15px;
+  --font-size-body-max:  17px;
+  --line-height-body:    1.55;
+
+  /* Label / meta */
+  --font-size-label-min: 12px;
+  --font-size-label-max: 14px;
+  --font-weight-label:   600;
+
+  /* ── Spacing (base unit 8px) ────────────────────────────── */
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-7:  28px;
+  --space-8:  32px;
+  --space-14: 56px;
+  --space-18: 72px;
+  --space-22: 88px;
+
+  /* ── Border radius ──────────────────────────────────────── */
+  --radius-sm:    8px;   /* buttons, inputs */
+  --radius-md:   12px;   /* cards, surfaces */
+  --radius-lg:   16px;   /* large surfaces */
+  --radius-modal: 18px;  /* modals, hero card */
+  --radius-cta:  24px;   /* CTA band */
+  --radius-full: 999px;  /* pills, badges, avatars */
+
+  /* ── Shadows ────────────────────────────────────────────── */
+  --shadow-card:        0 1px 3px rgba(17, 24, 39, 0.05);
+  --shadow-raised:      0 4px 14px -4px rgba(99, 102, 241, 0.25);
+  --shadow-modal:       0 24px 60px -12px rgba(0, 0, 0, 0.4);
+  --shadow-btn-primary: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+/* ── Dark mode ───────────────────────────────────────────────── */
+html.dark {
+  --color-bg:                 #111827;
+  --color-surface:            #1F2937;
+  --color-surface-subtle:     #111827;
+
+  --color-text-primary:       #F9FAFB;
+  --color-text-muted:         #9CA3AF;
+  --color-text-faint:         #6B7280;
+  --color-text-body:          #D1D5DB;
+
+  --color-secondary:          #1E2449;
+  --color-secondary-text:     #A5B4FC;
+
+  --color-accent-badge-bg:    #2D1F08;
+  --color-accent-badge-text:  #FCD34D;
+
+  --color-border:             #374151;
+  --color-border-subtle:      #374151;
+  --color-border-highlight:   #4338CA;
+  --color-border-dashed:      #4B5563;
+  --color-border-error:       #7F1D1D;
+  --color-border-success:     #14532D;
+
+  --color-error-bg:           #450A0A;
+  --color-error-text:         #FCA5A5;
+  --color-success-bg:         #052E16;
+  --color-success-text:       #6EE7B7;
+
+  --color-nav-glass:          rgba(17,24,39,.9);
+
+  --avatar-1-bg:   #1E2449;  --avatar-1-text: #A5B4FC;
+  --avatar-2-bg:   #2D1F08;  --avatar-2-text: #FCD34D;
+  --avatar-3-bg:   #052E16;  --avatar-3-text: #6EE7B7;
+  --avatar-4-bg:   #2D0A1E;  --avatar-4-text: #F9A8D4;
+  --avatar-5-bg:   #082332;  --avatar-5-text: #7DD3FC;
+
+  --shadow-card:   0 1px 3px rgba(0,0,0,.3);
+  --shadow-raised: 0 4px 14px -4px rgba(0,0,0,.5);
+  --shadow-modal:  0 24px 60px -12px rgba(0,0,0,.7);
+}
+
+/* Smooth theme transitions */
+html, body {
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  transition: background 0.15s, color 0.15s;
+}
