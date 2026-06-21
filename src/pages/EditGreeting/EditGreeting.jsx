@@ -251,13 +251,15 @@ export default function EditGreeting() {
           onChange={e => setText(e.target.value)}
           dir="rtl"
           style={{
-            width: '100%', minHeight: 150,
-            border: '1.5px solid var(--color-border)',
-            borderRadius: 10, padding: 14,
-            fontSize: 'var(--font-size-body-min)', lineHeight: 1.6,
+            width: '100%', minHeight: '150px',
+            padding: '14px',
+            fontSize: '15px', lineHeight: '1.6',
+            borderRadius: '8px',
+            border: '1px solid var(--color-border-secondary)',
             color: 'var(--color-text-primary)',
+            background: 'var(--color-background-primary)',
             resize: 'vertical', outline: 'none',
-            fontFamily: 'inherit', boxSizing: 'border-box',
+            fontFamily: 'inherit',
           }}
         />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'var(--space-3)' }}>
