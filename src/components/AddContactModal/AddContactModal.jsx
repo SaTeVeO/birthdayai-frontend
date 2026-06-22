@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import BirthdayPicker from '../BirthdayPicker/BirthdayPicker'
 
 const inputStyle = {
   width: '100%',
@@ -132,10 +133,11 @@ export default function AddContactModal({ onClose, onSuccess }) {
         <label style={labelStyle}>
           תאריך לידה <span style={{ color: 'var(--color-error)' }}>*</span>
         </label>
-        <input
-          type="date" dir="ltr"
-          value={birthday} onChange={e => setBirthday(e.target.value)}
-          style={{ ...inputStyle, marginBottom: 'var(--space-4)' }}
+        <BirthdayPicker
+          value={birthday}
+          onChange={setBirthday}
+          inputStyle={inputStyle}
+          style={{ marginBottom: 'var(--space-4)' }}
         />
 
         {/* Relationship */}

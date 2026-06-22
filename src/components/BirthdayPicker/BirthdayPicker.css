@@ -1,0 +1,4 @@
+.birthday-picker-wrapper .react-datepicker-wrapper,
+.birthday-picker-wrapper .react-datepicker__input-container {
+  width: 100%;
+}

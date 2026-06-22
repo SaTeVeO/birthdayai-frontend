@@ -1,6 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import * as XLSX from 'xlsx'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import BirthdayPicker from '../../components/BirthdayPicker/BirthdayPicker'
+import AddContactModal from '../../components/AddContactModal/AddContactModal'
 
 const MONTHS_HE = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר']
 
@@ -37,6 +40,42 @@ function daysText(days) {
   return `בעוד ${days} ימים`
 }
 
+function formatDisplayDate(iso) {
+  if (!iso) return ''
+  const [y, m, d] = iso.split('-')
+  return `${d}/${m}/${y}`
+}
+
+function expandYear(yStr) {
+  const n = parseInt(yStr, 10)
+  if (yStr.length <= 2) return n < 30 ? 2000 + n : 1900 + n
+  return n
+}
+
+function parseImportDate(val) {
+  if (val == null || val === '') return ''
+  // Excel date serial
+  if (typeof val === 'number') {
+    const date = new Date(Math.round((val - 25569) * 86400 * 1000))
+    const y = date.getUTCFullYear()
+    const m = String(date.getUTCMonth() + 1).padStart(2, '0')
+    const d = String(date.getUTCDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+  const s = String(val).trim()
+  // Already ISO: YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+  // DD/MM/YYYY, DD.MM.YYYY, DD-MM-YYYY (and 2-digit year variants)
+  const match = s.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2,4})$/)
+  if (match) {
+    const d = match[1].padStart(2, '0')
+    const m = match[2].padStart(2, '0')
+    const y = String(expandYear(match[3])).padStart(4, '0')
+    return `${y}-${m}-${d}`
+  }
+  return ''
+}
+
 const inputStyle = {
   width: '100%',
   padding: '10px 14px',
@@ -55,6 +94,201 @@ const labelStyle = {
   fontSize: 13, fontWeight: 600,
   marginBottom: 6,
   color: 'var(--color-text-primary)',
+}
+
+function EditableCell({ value, onChange, dir = 'rtl', placeholder = '', disabled = false }) {
+  const [focused, setFocused] = useState(false)
+  return (
+    <td style={{ padding: '2px 4px', borderBottom: '1px solid var(--color-border-subtle)', verticalAlign: 'middle' }}>
+      <input
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        dir={dir}
+        placeholder={placeholder}
+        disabled={disabled}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={{
+          width: '100%', padding: '5px 7px',
+          border: focused ? '1.5px solid var(--color-primary)' : '1.5px solid transparent',
+          borderRadius: 4,
+          background: focused ? 'var(--color-bg)' : 'transparent',
+          fontSize: 13,
+          color: disabled ? 'var(--color-text-faint)' : 'var(--color-text-primary)',
+          fontFamily: 'inherit', outline: 'none',
+          cursor: disabled ? 'default' : 'text',
+          boxSizing: 'border-box',
+        }}
+      />
+    </td>
+  )
+}
+
+function ImportPreviewModal({ contacts: initialContacts, onClose, onConfirm, saving }) {
+  const [rows, setRows] = useState(() =>
+    initialContacts.map(c => ({
+      name:            c.name || '',
+      birthdayDisplay: formatDisplayDate(c.birthday),
+      relationship:    c.relationship || '',
+      phone:           c.phone || '',
+      email:           c.email || '',
+      hobbiesStr:      Array.isArray(c.hobbies) ? c.hobbies.join(', ') : (c.hobbies || ''),
+      notes:           c.notes || '',
+    }))
+  )
+  const [checked, setChecked] = useState(() => initialContacts.map(() => true))
+
+  const checkedCount = checked.filter(Boolean).length
+  const allChecked   = rows.length > 0 && checked.every(Boolean)
+  const someChecked  = checked.some(Boolean) && !allChecked
+
+  function updateRow(i, field, value) {
+    setRows(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: value } : r))
+  }
+
+  function handleConfirm() {
+    const selected = rows
+      .filter((_, i) => checked[i])
+      .map(r => ({
+        name:         r.name.trim(),
+        birthday:     parseImportDate(r.birthdayDisplay),
+        relationship: r.relationship.trim() || null,
+        phone:        r.phone.trim()        || null,
+        email:        r.email.trim()        || null,
+        hobbies:      r.hobbiesStr.trim()
+          ? r.hobbiesStr.split(',').map(s => s.trim()).filter(Boolean)
+          : null,
+        notes:        r.notes.trim() || null,
+      }))
+      .filter(r => r.name)
+    onConfirm(selected)
+  }
+
+  const thStyle = {
+    padding: '8px 10px', fontWeight: 700, fontSize: 12,
+    color: 'var(--color-text-muted)',
+    borderBottom: '1px solid var(--color-border)',
+    whiteSpace: 'nowrap', textAlign: 'right',
+    background: 'var(--color-bg)',
+  }
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0,
+        background: 'rgba(0,0,0,.5)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 100, padding: 'var(--space-4)',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: 'var(--color-surface)',
+          borderRadius: 'var(--radius-modal)',
+          padding: 'var(--space-8)',
+          width: '100%', maxWidth: 900,
+          maxHeight: '85vh', overflowY: 'auto',
+          boxShadow: 'var(--shadow-modal)',
+          direction: 'rtl',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-4)' }}>
+          <h2 style={{ fontSize: 'var(--font-size-page-title-min)', fontWeight: 800, margin: 0, color: 'var(--color-text-primary)' }}>
+            תצוגה מקדימה – ייבוא אנשי קשר
+          </h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--color-text-muted)', lineHeight: 1, padding: 4 }}>✕</button>
+        </div>
+
+        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', margin: '0 0 var(--space-4)' }}>
+          נמצאו <strong style={{ color: 'var(--color-text-primary)' }}>{rows.length}</strong> אנשי קשר · לחץ על תא לעריכה לפני הייבוא
+        </p>
+
+        <div style={{ overflowX: 'auto', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', direction: 'ltr', tableLayout: 'fixed' }}>
+            <colgroup>
+              <col style={{ width: 40 }} />
+              <col style={{ width: '20%' }} />
+              <col style={{ width: '13%' }} />
+              <col style={{ width: '13%' }} />
+              <col style={{ width: '13%' }} />
+              <col style={{ width: '14%' }} />
+              <col />
+            </colgroup>
+            <thead>
+              <tr>
+                <th style={{ ...thStyle, textAlign: 'center' }}>
+                  <input
+                    type="checkbox"
+                    checked={allChecked}
+                    ref={el => { if (el) el.indeterminate = someChecked }}
+                    onChange={() => setChecked(prev => prev.map(() => !allChecked))}
+                    style={{ cursor: 'pointer', width: 15, height: 15 }}
+                  />
+                </th>
+                <th style={thStyle}>שם</th>
+                <th style={thStyle}>תאריך לידה</th>
+                <th style={thStyle}>קרבה</th>
+                <th style={thStyle}>טלפון</th>
+                <th style={thStyle}>אימייל</th>
+                <th style={thStyle}>תחביבים</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, i) => (
+                <tr key={i} style={{ opacity: checked[i] ? 1 : 0.45 }}>
+                  <td style={{ textAlign: 'center', padding: '4px', borderBottom: '1px solid var(--color-border-subtle)', verticalAlign: 'middle' }}>
+                    <input
+                      type="checkbox"
+                      checked={checked[i]}
+                      onChange={() => setChecked(prev => prev.map((v, idx) => idx === i ? !v : v))}
+                      style={{ cursor: 'pointer', width: 15, height: 15 }}
+                    />
+                  </td>
+                  <EditableCell value={row.name}            onChange={v => updateRow(i, 'name', v)}            dir="rtl" placeholder="שם מלא"     disabled={!checked[i]} />
+                  <EditableCell value={row.birthdayDisplay} onChange={v => updateRow(i, 'birthdayDisplay', v)} dir="ltr" placeholder="DD/MM/YYYY" disabled={!checked[i]} />
+                  <EditableCell value={row.relationship}    onChange={v => updateRow(i, 'relationship', v)}    dir="rtl" placeholder="—"           disabled={!checked[i]} />
+                  <EditableCell value={row.phone}           onChange={v => updateRow(i, 'phone', v)}           dir="ltr" placeholder="—"           disabled={!checked[i]} />
+                  <EditableCell value={row.email}           onChange={v => updateRow(i, 'email', v)}           dir="ltr" placeholder="—"           disabled={!checked[i]} />
+                  <EditableCell value={row.hobbiesStr}      onChange={v => updateRow(i, 'hobbiesStr', v)}      dir="rtl" placeholder="—"           disabled={!checked[i]} />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-6)' }}>
+          <button
+            onClick={handleConfirm}
+            disabled={saving || checkedCount === 0}
+            style={{
+              flex: 1, padding: 13,
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--color-primary)', color: 'var(--color-surface)',
+              fontWeight: 700, fontSize: 'var(--font-size-body-min)',
+              border: 'none',
+              cursor: (saving || checkedCount === 0) ? 'not-allowed' : 'pointer',
+              opacity: (saving || checkedCount === 0) ? 0.7 : 1,
+              boxShadow: 'var(--shadow-btn-primary)',
+            }}
+          >{saving ? 'מייבא...' : `ייבא ${checkedCount} אנשי קשר`}</button>
+          <button
+            onClick={onClose}
+            style={{
+              padding: '13px 20px',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text-muted)',
+              fontWeight: 600, fontSize: 'var(--font-size-body-min)',
+              cursor: 'pointer',
+            }}
+          >ביטול</button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function EditContactModal({ contact, onClose, onSuccess }) {
@@ -150,8 +384,12 @@ function EditContactModal({ contact, onClose, onSuccess }) {
           style={{ ...inputStyle, marginBottom: 'var(--space-4)' }} />
 
         <label style={labelStyle}>תאריך לידה <span style={{ color: 'var(--color-error)' }}>*</span></label>
-        <input type="date" dir="ltr" value={birthday} onChange={e => setBirthday(e.target.value)}
-          style={{ ...inputStyle, marginBottom: 'var(--space-4)' }} />
+        <BirthdayPicker
+          value={birthday}
+          onChange={setBirthday}
+          inputStyle={inputStyle}
+          style={{ marginBottom: 'var(--space-4)' }}
+        />
 
         <label style={labelStyle}>קשר</label>
         <input type="text" dir="rtl" placeholder="חבר, אחות, עמית לעבודה..." value={relationship} onChange={e => setRelationship(e.target.value)}
@@ -207,10 +445,103 @@ function EditContactModal({ contact, onClose, onSuccess }) {
 
 export default function ContactsPage() {
   const { user }   = useAuth()
-  const [contacts,   setContacts]   = useState([])
-  const [loading,    setLoading]    = useState(true)
-  const [editTarget, setEditTarget] = useState(null)
-  const [deletingId, setDeletingId] = useState(null)
+  const [contacts,     setContacts]     = useState([])
+  const [loading,      setLoading]      = useState(true)
+  const [editTarget,   setEditTarget]   = useState(null)
+  const [deletingId,   setDeletingId]   = useState(null)
+  const [showAddModal,  setShowAddModal]  = useState(false)
+  const [importPreview, setImportPreview] = useState(null)
+  const [importing,     setImporting]     = useState(false)
+  const fileInputRef = useRef(null)
+
+  useEffect(() => {
+    const handler = () => setShowAddModal(true)
+    window.addEventListener('openAddContact', handler)
+    return () => window.removeEventListener('openAddContact', handler)
+  }, [])
+
+  function handleExport() {
+    const rows = contacts.map(c => ({
+      'שם':         c.name,
+      'תאריך לידה': formatDisplayDate(c.birthday),
+      'קרבה':       c.relationship || '',
+      'טלפון':      c.phone        || '',
+      'אימייל':     c.email        || '',
+      'תחביבים':    Array.isArray(c.hobbies) ? c.hobbies.join(', ') : (c.hobbies || ''),
+      'הערות':      c.notes        || '',
+    }))
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'אנשי קשר')
+    XLSX.writeFile(wb, 'אנשי-קשר-BirthdayAI.xlsx')
+  }
+
+  function handleTemplate() {
+    const ws = XLSX.utils.aoa_to_sheet([['שם', 'תאריך לידה', 'קרבה', 'טלפון', 'אימייל', 'תחביבים', 'הערות']])
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'אנשי קשר')
+    XLSX.writeFile(wb, 'תבנית-אנשי-קשר.xlsx')
+  }
+
+  function handleImportFile(e) {
+    const file = e.target.files[0]
+    console.log('file selected:', file)
+    console.log('file name:', file?.name)
+    console.log('file size:', file?.size)
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onerror = err => console.error('FileReader error:', err)
+    reader.onload = evt => {
+      try {
+        const wb = XLSX.read(evt.target.result, { type: 'array' })
+        console.log('workbook sheets:', wb.SheetNames)
+        const ws = wb.Sheets[wb.SheetNames[0]]
+        const rows = XLSX.utils.sheet_to_json(ws, { raw: true })
+        console.log('parsed rows:', rows)
+        if (rows.length > 0) console.log('first row keys:', Object.keys(rows[0]))
+
+        const parsed = rows
+          .map(row => ({
+            name:         String(row['שם']         || '').trim(),
+            birthday:     parseImportDate(row['תאריך לידה']),
+            relationship: String(row['קרבה']       || '').trim() || null,
+            phone:        String(row['טלפון']      || '').trim() || null,
+            email:        String(row['אימייל']     || '').trim() || null,
+            hobbies:      row['תחביבים']
+              ? String(row['תחביבים']).split(',').map(s => s.trim()).filter(Boolean)
+              : null,
+            notes:        String(row['הערות']      || '').trim() || null,
+          }))
+          .filter(r => r.name)
+
+        console.log('contacts after mapping:', parsed)
+        if (parsed.length === 0) {
+          console.warn('0 contacts found — check that column headers match exactly')
+          alert('לא נמצאו אנשי קשר. בדוק שכותרות העמודות תואמות בדיוק: שם, תאריך לידה, קרבה, טלפון, אימייל, תחביבים, הערות')
+        }
+        setImportPreview(parsed)
+      } catch (err) {
+        console.error('XLSX parse error:', err)
+        alert('שגיאה בקריאת הקובץ: ' + err.message)
+      }
+    }
+    reader.readAsArrayBuffer(file)
+    e.target.value = ''
+  }
+
+  async function handleConfirmImport(selectedRows) {
+    if (!selectedRows?.length) return
+    setImporting(true)
+    const { error } = await supabase.from('contacts').insert(
+      selectedRows.map(c => ({ ...c, user_id: user.id }))
+    )
+    setImporting(false)
+    if (!error) {
+      setImportPreview(null)
+      loadContacts()
+    }
+  }
 
   async function loadContacts() {
     if (!user) return
@@ -256,16 +587,63 @@ export default function ContactsPage() {
   return (
     <main style={{ maxWidth: 800, margin: '0 auto', padding: 'var(--space-8)' }}>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-6)' }}>
-        <h1 style={{
-          fontSize: 'var(--font-size-page-title-max)',
-          fontWeight: 'var(--font-weight-page-title)',
-          letterSpacing: 'var(--letter-spacing-page-title)',
-          margin: 0, color: 'var(--color-text-primary)',
-        }}>אנשי קשר</h1>
-        <span style={{ fontSize: 'var(--font-size-label-max)', color: 'var(--color-text-muted)' }}>
-          {contacts.length} סה״כ
-        </span>
+      <div style={{ marginBottom: 'var(--space-6)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-3)' }}>
+          <h1 style={{
+            fontSize: 'var(--font-size-page-title-max)',
+            fontWeight: 'var(--font-weight-page-title)',
+            letterSpacing: 'var(--letter-spacing-page-title)',
+            margin: 0, color: 'var(--color-text-primary)',
+          }}>אנשי קשר</h1>
+          <span style={{ fontSize: 'var(--font-size-label-max)', color: 'var(--color-text-muted)' }}>
+            {contacts.length} סה״כ
+          </span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+          <button
+            onClick={handleTemplate}
+            style={{
+              padding: '8px var(--space-3)',
+              borderRadius: 'var(--radius-sm)',
+              background: 'transparent',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text-muted)',
+              fontWeight: 600, fontSize: 13, cursor: 'pointer',
+            }}
+          >הורד תבנית</button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              padding: '8px var(--space-3)',
+              borderRadius: 'var(--radius-sm)',
+              background: 'transparent',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text-muted)',
+              fontWeight: 600, fontSize: 13, cursor: 'pointer',
+            }}
+          >ייבוא מאקסל</button>
+          <button
+            onClick={handleExport}
+            disabled={contacts.length === 0}
+            style={{
+              padding: '8px var(--space-3)',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--color-secondary)',
+              border: 'none',
+              color: 'var(--color-secondary-text)',
+              fontWeight: 600, fontSize: 13,
+              cursor: contacts.length === 0 ? 'not-allowed' : 'pointer',
+              opacity: contacts.length === 0 ? 0.5 : 1,
+            }}
+          >ייצוא לאקסל</button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            style={{ display: 'none' }}
+            onChange={handleImportFile}
+          />
+        </div>
       </div>
 
       {contacts.length === 0 ? (
@@ -369,6 +747,25 @@ export default function ContactsPage() {
             setEditTarget(null)
             loadContacts()
           }}
+        />
+      )}
+
+      {showAddModal && (
+        <AddContactModal
+          onClose={() => setShowAddModal(false)}
+          onSuccess={() => {
+            setShowAddModal(false)
+            loadContacts()
+          }}
+        />
+      )}
+
+      {importPreview && (
+        <ImportPreviewModal
+          contacts={importPreview}
+          onClose={() => setImportPreview(null)}
+          onConfirm={handleConfirmImport}
+          saving={importing}
         />
       )}
     </main>
