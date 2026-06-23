@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { useLanguage } from '../../contexts/LanguageContext'
 
 const inputBase = {
   width: '100%',
@@ -19,6 +20,7 @@ function isEmailValid(v) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) }
 
 export default function RegisterPage() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
 
   const [name,        setName]        = useState('')
   const [email,       setEmail]       = useState('')
@@ -40,12 +42,23 @@ export default function RegisterPage() {
 
   const showError = nameErr || emailErr || passErr || matchErr || !!serverError
 
-  const errorMsg = serverError ? serverError
-    : nameErr  ? 'נא להזין שם מלא'
-    : emailErr ? 'כתובת האימייל אינה תקינה'
-    : passErr  ? 'הסיסמה חייבת להכיל לפחות 6 תווים'
-    : matchErr ? 'הסיסמאות אינן תואמות'
+  const errorMsg = serverError    ? serverError
+    : nameErr                     ? t('register.errorName')
+    : emailErr                    ? t('register.errorEmail')
+    : passErr                     ? t('register.errorPass')
+    : matchErr                    ? t('register.errorMatch')
     : ''
+
+  async function handleGoogleLogin() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + '/dashboard' },
+    })
+    if (error) {
+      console.error('Google login error:', error)
+      setServerError(t('register.errorGoogle'))
+    }
+  }
 
   async function submit() {
     setServerError('')
@@ -80,17 +93,16 @@ export default function RegisterPage() {
           <h1 style={{
             fontSize: 'var(--font-size-page-title-min)',
             fontWeight: 'var(--font-weight-page-title)',
-            margin: '0 0 6px',
-            textAlign: 'center',
+            margin: '0 0 6px', textAlign: 'center',
             letterSpacing: 'var(--letter-spacing-page-title)',
             color: 'var(--color-text-primary)',
-          }}>יצירת חשבון</h1>
+          }}>{t('register.title')}</h1>
           <p style={{
             textAlign: 'center',
             color: 'var(--color-text-muted)',
             fontSize: 'var(--font-size-label-max)',
             margin: '0 0 var(--space-6)',
-          }}>הצטרף ל‑BirthdayAI — חינם לגמרי</p>
+          }}>{t('register.subtitle')}</p>
 
           {showError && (
             <div style={{
@@ -99,8 +111,7 @@ export default function RegisterPage() {
               border: '1px solid var(--color-border-error)',
               color: 'var(--color-error-text)',
               padding: '10px 12px', borderRadius: 'var(--radius-sm)',
-              fontSize: 13, fontWeight: 600,
-              marginBottom: 'var(--space-4)',
+              fontSize: 13, fontWeight: 600, marginBottom: 'var(--space-4)',
             }}>
               <span style={{
                 width: 16, height: 16, borderRadius: '50%',
@@ -112,18 +123,16 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Name */}
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>שם מלא</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('register.name')}</label>
           <input
-            type="text" placeholder="ישראל ישראלי" dir="rtl"
+            type="text" placeholder={t('register.namePlaceholder')} dir="rtl"
             value={name} onChange={e => setName(e.target.value)}
             style={nameErr ? inputErr : inputOk}
           />
 
           <div style={{ height: 'var(--space-4)' }} />
 
-          {/* Email */}
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>אימייל</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('register.email')}</label>
           <input
             type="email" placeholder="name@email.com" dir="ltr"
             value={email} onChange={e => setEmail(e.target.value)}
@@ -132,20 +141,18 @@ export default function RegisterPage() {
 
           <div style={{ height: 'var(--space-4)' }} />
 
-          {/* Password */}
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>סיסמה</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('register.password')}</label>
           <input
-            type="password" placeholder="לפחות 6 תווים" dir="ltr"
+            type="password" placeholder={t('register.passwordHint')} dir="ltr"
             value={password} onChange={e => setPassword(e.target.value)}
             style={passErr ? inputErr : inputOk}
           />
 
           <div style={{ height: 'var(--space-4)' }} />
 
-          {/* Confirm password */}
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>אימות סיסמה</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('register.confirmPassword')}</label>
           <input
-            type="password" placeholder="הזן סיסמה שנית" dir="ltr"
+            type="password" placeholder={t('register.confirmHint')} dir="ltr"
             value={confirmPass} onChange={e => setConfirmPass(e.target.value)}
             style={matchErr ? inputErr : inputOk}
           />
@@ -164,9 +171,8 @@ export default function RegisterPage() {
               opacity: submitting ? 0.7 : 1,
               boxShadow: 'var(--shadow-btn-primary)',
             }}
-          >{submitting ? '...' : 'הירשם'}</button>
+          >{submitting ? '...' : t('register.submit')}</button>
 
-          {/* Divider */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
             <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
             <span style={{ fontSize: 'var(--font-size-label-min)', color: 'var(--color-text-faint)' }}>או</span>
@@ -174,7 +180,7 @@ export default function RegisterPage() {
           </div>
 
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={handleGoogleLogin}
             style={{
               width: '100%', padding: 12,
               borderRadius: 'var(--radius-sm)',
@@ -191,7 +197,7 @@ export default function RegisterPage() {
               background: 'conic-gradient(#EA4335,#FBBC05,#34A853,#4285F4)',
               flexShrink: 0,
             }} />
-            המשך עם Google
+            {t('register.googleBtn')}
           </button>
         </div>
 
@@ -201,11 +207,11 @@ export default function RegisterPage() {
           color: 'var(--color-text-muted)',
           margin: 'var(--space-5) 0 0',
         }}>
-          כבר יש לך חשבון?{' '}
+          {t('register.hasAccount')}{' '}
           <span
             onClick={() => navigate('/login')}
             style={{ color: 'var(--color-primary)', fontWeight: 700, cursor: 'pointer' }}
-          >כניסה</span>
+          >{t('register.loginLink')}</span>
         </p>
       </div>
     </div>

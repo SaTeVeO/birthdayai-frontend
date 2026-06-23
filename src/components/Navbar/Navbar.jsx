@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { useLanguage } from '../../contexts/LanguageContext'
+
+const LANG_FLAGS = [
+  { key: 'he', flag: '🇮🇱' },
+  { key: 'en', flag: '🇺🇸' },
+  { key: 'ru', flag: '🇷🇺' },
+]
 
 function Logomark({ onClick }) {
   return (
@@ -15,11 +22,9 @@ function Logomark({ onClick }) {
       }}>
         <div style={{ width: 13, height: 13, borderRadius: 4, background: 'var(--color-surface)' }} />
       </div>
-      <span style={{
-        fontWeight: 800, fontSize: 18,
-        letterSpacing: 'var(--letter-spacing-h2)',
-        color: 'var(--color-text-primary)',
-      }}>BirthdayAI</span>
+      <span style={{ fontWeight: 800, fontSize: 18, letterSpacing: 'var(--letter-spacing-h2)', color: 'var(--color-text-primary)' }}>
+        BirthdayAI
+      </span>
     </div>
   )
 }
@@ -37,9 +42,7 @@ const shell = {
 }
 
 function useDark() {
-  const [dark, setDark] = useState(
-    () => document.documentElement.classList.contains('dark')
-  )
+  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
   function toggle() {
     const next = !dark
     setDark(next)
@@ -62,7 +65,8 @@ const darkBtnStyle = {
 export default function Navbar({ variant = 'landing' }) {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [displayName,  setDisplayName]  = useState('')
+  const { language, setLanguage, t } = useLanguage()
+  const [displayName, setDisplayName] = useState('')
   const { dark, toggle } = useDark()
 
   useEffect(() => {
@@ -84,25 +88,45 @@ export default function Navbar({ variant = 'landing' }) {
   const onLogoClick = () => navigate(user ? '/dashboard' : '/')
 
   const DarkBtn = (
-    <button onClick={toggle} style={darkBtnStyle} title={dark ? 'עבור למצב בהיר' : 'עבור למצב כהה'}>
+    <button onClick={toggle} style={darkBtnStyle} title={dark ? t('nav.darkOff') : t('nav.darkOn')}>
       {dark ? '☀️' : '🌙'}
     </button>
   )
 
-  /* ── Login / Register: centered logo + toggle ──────────── */
+  const LangSwitcher = (
+    <div style={{ display: 'flex', gap: 2 }}>
+      {LANG_FLAGS.map(l => (
+        <button
+          key={l.key}
+          onClick={() => setLanguage(l.key)}
+          title={l.key}
+          style={{
+            width: 30, height: 30,
+            borderRadius: 'var(--radius-sm)',
+            border: language === l.key ? '1.5px solid var(--color-primary)' : '1px solid transparent',
+            background: language === l.key ? 'var(--color-secondary)' : 'transparent',
+            fontSize: 16, cursor: 'pointer', lineHeight: 1,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >{l.flag}</button>
+      ))}
+    </div>
+  )
+
+  /* ── Login / Register ───────────────────────────────────── */
   if (variant === 'login') {
     return (
       <nav className="nav-shell" style={{ ...shell, justifyContent: 'space-between' }}>
-        <div style={{ width: 34 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{LangSwitcher}</div>
         <Logomark onClick={onLogoClick} />
         {DarkBtn}
       </nav>
     )
   }
 
-  /* ── Edit / Settings: back button + title + toggle + logo ─ */
+  /* ── Edit / Settings ────────────────────────────────────── */
   if (variant === 'edit' || variant === 'settings') {
-    const title = variant === 'settings' ? 'הגדרות' : 'עריכת ברכה'
+    const title = variant === 'settings' ? t('nav.settings') : t('nav.editGreeting')
     return (
       <nav className="nav-shell" style={{ ...shell, justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -117,10 +141,11 @@ export default function Navbar({ variant = 'landing' }) {
               color: 'var(--color-text-body)',
               fontWeight: 600, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
             }}
-          >→ חזרה</button>
+          >{t('nav.back')}</button>
           <span style={{ fontWeight: 700, fontSize: 'var(--font-size-body-min)', color: 'var(--color-text-primary)' }}>{title}</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {LangSwitcher}
           {DarkBtn}
           <Logomark onClick={onLogoClick} />
         </div>
@@ -128,81 +153,82 @@ export default function Navbar({ variant = 'landing' }) {
     )
   }
 
-  /* ── Dashboard: full action bar ──────────────────────────── */
+  /* ── Dashboard ──────────────────────────────────────────── */
   if (variant === 'dashboard') {
     return (
       <nav className="nav-shell" style={{ ...shell, justifyContent: 'space-between' }}>
-          <Logomark onClick={onLogoClick} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button
-              className="nav-hide-mobile"
-              onClick={() => window.dispatchEvent(new CustomEvent('openAddContact'))}
-              style={{
-                padding: '9px var(--space-4)',
-                borderRadius: 'var(--radius-sm)',
-                background: 'var(--color-primary)', color: 'var(--color-surface)',
-                fontWeight: 600, fontSize: 'var(--font-size-label-max)',
-                border: 'none', cursor: 'pointer',
-                boxShadow: '0 1px 2px rgba(99,102,241,.4)',
-              }}
-            >+ הוסף איש קשר</button>
-            <button
-              className="nav-hide-mobile"
-              onClick={() => navigate('/contacts')}
-              style={{
-                padding: '9px var(--space-3)',
-                borderRadius: 'var(--radius-sm)',
-                background: 'transparent',
-                border: '1px solid var(--color-border)',
-                color: 'var(--color-text-muted)',
-                fontWeight: 600, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
-              }}
-            >אנשי קשר</button>
-            <button
-              className="nav-hide-mobile"
-              onClick={() => navigate('/settings')}
-              style={{
-                padding: '9px var(--space-3)',
-                borderRadius: 'var(--radius-sm)',
-                background: 'transparent',
-                border: '1px solid var(--color-border)',
-                color: 'var(--color-text-muted)',
-                fontWeight: 600, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
-              }}
-            >הגדרות</button>
-            {DarkBtn}
-            <button
-              onClick={async () => {
-                await supabase.auth.signOut({ scope: 'local' })
-                window.localStorage.clear()
-                window.sessionStorage.clear()
-                window.location.href = '/login'
-              }}
-              style={{
-                padding: '9px var(--space-3)',
-                borderRadius: 'var(--radius-sm)',
-                background: 'transparent',
-                border: '1px solid var(--color-error)',
-                color: 'var(--color-error)',
-                fontWeight: 700, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
-              }}
-            >התנתק</button>
-            <div
-              onClick={() => navigate('/settings')}
-              style={{
-                width: 36, height: 36, borderRadius: 'var(--radius-full)',
-                background: 'var(--color-secondary)', color: 'var(--color-secondary-text)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 700, fontSize: 'var(--font-size-label-max)',
-                cursor: 'pointer',
-              }}
-            >{userInitial}</div>
-          </div>
-        </nav>
+        <Logomark onClick={onLogoClick} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            className="nav-hide-mobile"
+            onClick={() => window.dispatchEvent(new CustomEvent('openAddContact'))}
+            style={{
+              padding: '9px var(--space-4)',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--color-primary)', color: 'var(--color-surface)',
+              fontWeight: 600, fontSize: 'var(--font-size-label-max)',
+              border: 'none', cursor: 'pointer',
+              boxShadow: '0 1px 2px rgba(99,102,241,.4)',
+            }}
+          >{t('nav.addContact')}</button>
+          <button
+            className="nav-hide-mobile"
+            onClick={() => navigate('/contacts')}
+            style={{
+              padding: '9px var(--space-3)',
+              borderRadius: 'var(--radius-sm)',
+              background: 'transparent',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text-muted)',
+              fontWeight: 600, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
+            }}
+          >{t('nav.contacts')}</button>
+          <button
+            className="nav-hide-mobile"
+            onClick={() => navigate('/settings')}
+            style={{
+              padding: '9px var(--space-3)',
+              borderRadius: 'var(--radius-sm)',
+              background: 'transparent',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text-muted)',
+              fontWeight: 600, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
+            }}
+          >{t('nav.settings')}</button>
+          {LangSwitcher}
+          {DarkBtn}
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut({ scope: 'local' })
+              window.localStorage.clear()
+              window.sessionStorage.clear()
+              window.location.href = '/login'
+            }}
+            style={{
+              padding: '9px var(--space-3)',
+              borderRadius: 'var(--radius-sm)',
+              background: 'transparent',
+              border: '1px solid var(--color-error)',
+              color: 'var(--color-error)',
+              fontWeight: 700, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
+            }}
+          >{t('nav.logout')}</button>
+          <div
+            onClick={() => navigate('/settings')}
+            style={{
+              width: 36, height: 36, borderRadius: 'var(--radius-full)',
+              background: 'var(--color-secondary)', color: 'var(--color-secondary-text)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 700, fontSize: 'var(--font-size-label-max)',
+              cursor: 'pointer',
+            }}
+          >{userInitial}</div>
+        </div>
+      </nav>
     )
   }
 
-  /* ── Landing: logo + toggle + כניסה / הרשמה ─────────────── */
+  /* ── Landing ────────────────────────────────────────────── */
   return (
     <nav className="nav-shell" style={{
       ...shell,
@@ -212,6 +238,7 @@ export default function Navbar({ variant = 'landing' }) {
     }}>
       <Logomark onClick={onLogoClick} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+        {LangSwitcher}
         {DarkBtn}
         <button
           onClick={() => navigate('/login')}
@@ -222,7 +249,7 @@ export default function Navbar({ variant = 'landing' }) {
             color: 'var(--color-text-body)',
             fontWeight: 600, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
           }}
-        >כניסה</button>
+        >{t('nav.login')}</button>
         <button
           onClick={() => navigate('/register')}
           style={{
@@ -233,7 +260,7 @@ export default function Navbar({ variant = 'landing' }) {
             fontWeight: 600, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
             boxShadow: '0 1px 2px rgba(99,102,241,.4)',
           }}
-        >הרשמה</button>
+        >{t('nav.register')}</button>
       </div>
     </nav>
   )

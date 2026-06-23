@@ -1,7 +1,14 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { useLanguage } from '../../contexts/LanguageContext'
 import BirthdayPicker from '../BirthdayPicker/BirthdayPicker'
+
+const GENDERS = [
+  { key: 'unknown', emoji: '❓' },
+  { key: 'male',    emoji: '👨' },
+  { key: 'female',  emoji: '👩' },
+]
 
 const inputStyle = {
   width: '100%',
@@ -25,8 +32,10 @@ const labelStyle = {
 
 export default function AddContactModal({ onClose, onSuccess }) {
   const { user } = useAuth()
+  const { t } = useLanguage()
 
   const [name,         setName]         = useState('')
+  const [gender,       setGender]       = useState('unknown')
   const [birthday,     setBirthday]     = useState('')
   const [relationship, setRelationship] = useState('')
   const [phone,        setPhone]        = useState('')
@@ -38,8 +47,8 @@ export default function AddContactModal({ onClose, onSuccess }) {
 
   async function handleSubmit() {
     setError('')
-    if (!name.trim()) { setError('נא להזין שם מלא'); return }
-    if (!birthday)    { setError('נא להזין תאריך לידה'); return }
+    if (!name.trim()) { setError(t('contact.errorName'));     return }
+    if (!birthday)    { setError(t('contact.errorBirthday')); return }
 
     setSaving(true)
     const { error: insertError } = await supabase
@@ -47,6 +56,7 @@ export default function AddContactModal({ onClose, onSuccess }) {
       .insert({
         user_id:      user.id,
         name:         name.trim(),
+        gender,
         birthday,
         relationship: relationship.trim() || null,
         phone:        phone.trim()        || null,
@@ -59,10 +69,16 @@ export default function AddContactModal({ onClose, onSuccess }) {
 
     setSaving(false)
     if (insertError) {
-      setError('שגיאה בהוספת איש קשר: ' + insertError.message)
+      setError(t('contact.errorSave') + insertError.message)
     } else {
       onSuccess()
     }
+  }
+
+  const genderLabels = {
+    unknown: t('contact.genderUnknown'),
+    male:    t('contact.male'),
+    female:  t('contact.female'),
   }
 
   return (
@@ -91,7 +107,7 @@ export default function AddContactModal({ onClose, onSuccess }) {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-6)' }}>
           <h2 style={{ fontSize: 'var(--font-size-page-title-min)', fontWeight: 800, margin: 0, color: 'var(--color-text-primary)' }}>
-            הוסף איש קשר
+            {t('contact.addTitle')}
           </h2>
           <button
             onClick={onClose}
@@ -121,17 +137,38 @@ export default function AddContactModal({ onClose, onSuccess }) {
 
         {/* Name */}
         <label style={labelStyle}>
-          שם מלא <span style={{ color: 'var(--color-error)' }}>*</span>
+          {t('contact.name')} <span style={{ color: 'var(--color-error)' }}>*</span>
         </label>
         <input
-          type="text" dir="rtl" placeholder="ישראל ישראלי"
+          type="text" dir="rtl" placeholder={t('contact.namePlaceholder')}
           value={name} onChange={e => setName(e.target.value)}
-          style={{ ...inputStyle, marginBottom: 'var(--space-4)' }}
+          style={{ ...inputStyle, marginBottom: 'var(--space-3)' }}
         />
+
+        {/* Gender */}
+        <label style={{ ...labelStyle, marginBottom: 8 }}>{t('contact.gender')}</label>
+        <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
+          {GENDERS.map(g => (
+            <button
+              key={g.key}
+              type="button"
+              onClick={() => setGender(g.key)}
+              style={{
+                flex: 1, padding: '8px 4px',
+                borderRadius: 'var(--radius-sm)',
+                border: gender === g.key ? '1.5px solid var(--color-primary)' : '1.5px solid var(--color-border)',
+                background: gender === g.key ? 'var(--color-secondary)' : 'transparent',
+                color: gender === g.key ? 'var(--color-secondary-text)' : 'var(--color-text-muted)',
+                fontWeight: gender === g.key ? 700 : 600,
+                fontSize: 13, cursor: 'pointer',
+              }}
+            >{g.emoji} {genderLabels[g.key]}</button>
+          ))}
+        </div>
 
         {/* Birthday */}
         <label style={labelStyle}>
-          תאריך לידה <span style={{ color: 'var(--color-error)' }}>*</span>
+          {t('contact.birthday')} <span style={{ color: 'var(--color-error)' }}>*</span>
         </label>
         <BirthdayPicker
           value={birthday}
@@ -141,23 +178,23 @@ export default function AddContactModal({ onClose, onSuccess }) {
         />
 
         {/* Relationship */}
-        <label style={labelStyle}>קשר</label>
+        <label style={labelStyle}>{t('contact.relationship')}</label>
         <input
-          type="text" dir="rtl" placeholder="חבר, אחות, עמית לעבודה..."
+          type="text" dir="rtl" placeholder={t('contact.relPlaceholder')}
           value={relationship} onChange={e => setRelationship(e.target.value)}
           style={{ ...inputStyle, marginBottom: 'var(--space-4)' }}
         />
 
         {/* Phone */}
-        <label style={labelStyle}>טלפון</label>
+        <label style={labelStyle}>{t('contact.phone')}</label>
         <input
-          type="tel" dir="ltr" placeholder="050-1234567"
+          type="tel" dir="ltr" placeholder={t('contact.phonePlaceholder')}
           value={phone} onChange={e => setPhone(e.target.value)}
           style={{ ...inputStyle, marginBottom: 'var(--space-4)' }}
         />
 
         {/* Email */}
-        <label style={labelStyle}>אימייל</label>
+        <label style={labelStyle}>{t('contact.email')}</label>
         <input
           type="email" dir="ltr" placeholder="name@email.com"
           value={email} onChange={e => setEmail(e.target.value)}
@@ -165,17 +202,17 @@ export default function AddContactModal({ onClose, onSuccess }) {
         />
 
         {/* Hobbies */}
-        <label style={labelStyle}>תחביבים</label>
+        <label style={labelStyle}>{t('contact.hobbies')}</label>
         <input
-          type="text" dir="rtl" placeholder="ריצה, ציור, מוסיקה (מופרד בפסיקים)"
+          type="text" dir="rtl" placeholder={t('contact.hobbiesPlaceholder')}
           value={hobbies} onChange={e => setHobbies(e.target.value)}
           style={{ ...inputStyle, marginBottom: 'var(--space-4)' }}
         />
 
         {/* Notes */}
-        <label style={labelStyle}>הערות</label>
+        <label style={labelStyle}>{t('contact.notes')}</label>
         <textarea
-          dir="rtl" placeholder="פרטים נוספים..." rows={3}
+          dir="rtl" placeholder={t('contact.notesPlaceholder')} rows={3}
           value={notes} onChange={e => setNotes(e.target.value)}
           style={{ ...inputStyle, resize: 'vertical', marginBottom: 'var(--space-6)' }}
         />
@@ -194,7 +231,7 @@ export default function AddContactModal({ onClose, onSuccess }) {
               opacity: saving ? 0.7 : 1,
               boxShadow: 'var(--shadow-btn-primary)',
             }}
-          >{saving ? 'שומר...' : 'הוסף איש קשר'}</button>
+          >{saving ? t('contact.saving') : t('contact.addBtn')}</button>
           <button
             onClick={onClose}
             style={{
@@ -206,7 +243,7 @@ export default function AddContactModal({ onClose, onSuccess }) {
               fontWeight: 600, fontSize: 'var(--font-size-body-min)',
               cursor: 'pointer',
             }}
-          >ביטול</button>
+          >{t('contact.cancel')}</button>
         </div>
       </div>
     </div>

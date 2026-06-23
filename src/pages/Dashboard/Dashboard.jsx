@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { useLanguage } from '../../contexts/LanguageContext'
+import { getBirthdayLabel } from '../../translations/translations'
 import AddContactModal from '../../components/AddContactModal/AddContactModal'
-
-const MONTHS_HE = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר']
 
 const AVATAR_SLOTS = [
   { bg: 'var(--avatar-1-bg)', color: 'var(--avatar-1-text)' },
@@ -14,7 +14,6 @@ const AVATAR_SLOTS = [
   { bg: 'var(--avatar-5-bg)', color: 'var(--avatar-5-text)' },
 ]
 
-// Parse "YYYY-MM-DD" without UTC shift
 function parseBirthday(str) {
   const [, m, d] = str.split('-').map(Number)
   return { month: m - 1, day: d }
@@ -29,42 +28,11 @@ function daysUntil(birthday) {
   return Math.round((next - today) / 86400000)
 }
 
-function birthdayLabel(birthday) {
-  const { month, day } = parseBirthday(birthday)
-  return `${day} ב${MONTHS_HE[month]}`
-}
-
-function daysText(days) {
-  if (days === 1) return 'מחר'
-  return `בעוד ${days} ימים`
-}
-
-function activityMeta(iso) {
-  const d = new Date(iso)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const itemDate = new Date(d)
-  itemDate.setHours(0, 0, 0, 0)
-  const time     = d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
-  const diffDays = Math.round((today - itemDate) / 86400000)
-  if (diffDays === 0) return `היום, ${time}`
-  if (diffDays === 1) return `אתמול, ${time}`
-  return `לפני ${diffDays} ימים`
-}
-
-function activityText(g) {
-  const name = g.contacts?.name || 'איש קשר'
-  return g.status === 'sent' ? `ברכה נשלחה ל${name}` : `ברכה נוצרה עבור ${name}`
-}
-
-function activityDot(status) {
-  return status === 'sent' ? 'var(--color-primary)' : 'var(--color-accent)'
-}
-
 export default function Dashboard() {
   const navigate  = useNavigate()
   const location  = useLocation()
   const { user }  = useAuth()
+  const { language, t } = useLanguage()
 
   const [contacts,       setContacts]       = useState([])
   const [sentCount,      setSentCount]      = useState(0)
@@ -74,7 +42,6 @@ export default function Dashboard() {
   const [showAddModal,   setShowAddModal]   = useState(false)
   const [refreshKey,     setRefreshKey]     = useState(0)
 
-  // Open modal via custom event dispatched from Navbar
   useEffect(() => {
     const handler = () => setShowAddModal(true)
     window.addEventListener('openAddContact', handler)
@@ -98,7 +65,7 @@ export default function Dashboard() {
         .map((c, i) => ({
           ...c,
           days:        daysUntil(c.birthday),
-          dateLabel:   birthdayLabel(c.birthday),
+          dateLabel:   getBirthdayLabel(c.birthday, language),
           initial:     (c.name || '?')[0],
           avatarBg:    AVATAR_SLOTS[i % AVATAR_SLOTS.length].bg,
           avatarColor: AVATAR_SLOTS[i % AVATAR_SLOTS.length].color,
@@ -125,16 +92,40 @@ export default function Dashboard() {
 
       setSentCount(sentResult.count ?? 0)
       setRecentActivity(activityResult.data ?? [])
-
       setLoading(false)
     }
 
     load()
-  }, [user, refreshKey, location.key])
+  }, [user, refreshKey, location.key, language])
 
-  function handleContactAdded() {
-    setShowAddModal(false)
-    setRefreshKey(k => k + 1)
+  function activityMeta(iso) {
+    const d = new Date(iso)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const itemDate = new Date(d)
+    itemDate.setHours(0, 0, 0, 0)
+    const locale = language === 'he' ? 'he-IL' : language === 'ru' ? 'ru-RU' : 'en-US'
+    const time = d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
+    const diffDays = Math.round((today - itemDate) / 86400000)
+    if (diffDays === 0) return t('dashboard.todayTime', { time })
+    if (diffDays === 1) return t('dashboard.yesterday', { time })
+    return t('dashboard.daysAgo', { n: diffDays })
+  }
+
+  function activityText(g) {
+    const name = g.contacts?.name || ''
+    return g.status === 'sent'
+      ? t('dashboard.greetingSent',    { name })
+      : t('dashboard.greetingCreated', { name })
+  }
+
+  function daysText(days) {
+    if (days === 1) return t('dashboard.tomorrow')
+    return t('dashboard.inDays', { n: days })
+  }
+
+  function activityDot(status) {
+    return status === 'sent' ? 'var(--color-primary)' : 'var(--color-accent)'
   }
 
   const currentMonth   = new Date().getMonth()
@@ -144,7 +135,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <main style={{ maxWidth: 1080, margin: '0 auto', padding: 'var(--space-8)', display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
-        <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-body-min)' }}>טוען...</span>
+        <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-body-min)' }}>{t('dashboard.loading')}</span>
       </main>
     )
   }
@@ -152,30 +143,27 @@ export default function Dashboard() {
   return (
     <main className="dashboard-main" style={{ maxWidth: 1080, margin: '0 auto', padding: 'var(--space-8)' }}>
 
-      {/* ── Header ─────────────────────────────────────── */}
-      <div style={{
-        display: 'flex', alignItems: 'flex-start',
-        justifyContent: 'space-between', gap: 'var(--space-4)', flexWrap: 'wrap',
-      }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
         <div>
           <h1 style={{
             fontSize: 'var(--font-size-page-title-max)',
             fontWeight: 'var(--font-weight-page-title)',
             letterSpacing: 'var(--letter-spacing-page-title)',
             margin: 0, color: 'var(--color-text-primary)',
-          }}>שלום, {userName} 👋</h1>
+          }}>{t('dashboard.hello', { name: userName })}</h1>
           <p style={{ margin: '6px 0 0', color: 'var(--color-text-muted)', fontSize: 'var(--font-size-body-min)' }}>
             {contacts.length === 0
-              ? 'בוא נתחיל — אין עדיין אנשי קשר'
-              : `יש לך ${upcomingCount} ימי הולדת ב‑30 הימים הקרובים`}
+              ? t('dashboard.noContacts')
+              : t('dashboard.upcoming', { n: upcomingCount })}
           </p>
         </div>
       </div>
 
-      {/* ── Two-column grid ─────────────────────────────── */}
+      {/* Two-column grid */}
       <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 'var(--space-6)', marginTop: 'var(--space-7)', alignItems: 'start' }}>
 
-        {/* Left: contacts / empty state */}
+        {/* Left: contacts */}
         <div>
           {contacts.length === 0 ? (
             <div style={{
@@ -194,10 +182,10 @@ export default function Dashboard() {
                 <div style={{ width: 26, height: 26, borderRadius: 'var(--radius-sm)', border: '2.5px solid var(--color-primary)' }} />
               </div>
               <h3 style={{ fontSize: 'var(--font-size-card-title-max)', fontWeight: 700, margin: '0 0 var(--space-2)', color: 'var(--color-text-primary)' }}>
-                עדיין אין ימי הולדת
+                {t('dashboard.noBirthdays')}
               </h3>
               <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-body-min)', margin: '0 auto var(--space-6)', maxWidth: 360, lineHeight: 'var(--line-height-body)' }}>
-                הוסף את איש הקשר הראשון שלך כדי ש‑BirthdayAI יתחיל לעקוב ולשלוח ברכות אוטומטית.
+                {t('dashboard.noBirthdaysDesc')}
               </p>
               <button
                 onClick={() => setShowAddModal(true)}
@@ -207,13 +195,13 @@ export default function Dashboard() {
                   fontWeight: 600, fontSize: 'var(--font-size-body-min)',
                   border: 'none', cursor: 'pointer', boxShadow: 'var(--shadow-btn-primary)',
                 }}
-              >+ הוסף איש קשר ראשון</button>
+              >{t('dashboard.addFirst')}</button>
             </div>
           ) : (
             <>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                 <h2 style={{ fontSize: 'var(--font-size-label-max)', fontWeight: 700, color: 'var(--color-text-muted)', margin: 0 }}>
-                  ימי הולדת קרובים
+                  {t('dashboard.upcomingTitle')}
                 </h2>
                 <button
                   onClick={() => setShowAddModal(true)}
@@ -224,7 +212,7 @@ export default function Dashboard() {
                     border: 'none', cursor: 'pointer',
                     boxShadow: '0 1px 2px rgba(99,102,241,.4)',
                   }}
-                >+ הוסף</button>
+                >{t('dashboard.add')}</button>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                 {contacts.map(c => (
@@ -251,7 +239,7 @@ export default function Dashboard() {
                             color: 'var(--color-accent-badge-text)',
                             background: 'var(--color-accent-badge-bg)',
                             padding: '3px var(--space-2)', borderRadius: 'var(--radius-full)',
-                          }}>היום!</span>
+                          }}>{t('dashboard.today')}</span>
                         )}
                       </div>
                       <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 3 }}>
@@ -276,7 +264,7 @@ export default function Dashboard() {
                             border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
                             boxShadow: '0 1px 2px rgba(99,102,241,.4)',
                           }}
-                        >שלח ברכה</button>
+                        >{t('dashboard.sendGreeting')}</button>
                       ) : (
                         <button
                           onClick={() => navigate('/edit-greeting', { state: { contact: c } })}
@@ -287,7 +275,7 @@ export default function Dashboard() {
                             fontWeight: 600, fontSize: 13,
                             border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
                           }}
-                        >ערוך ברכה</button>
+                        >{t('dashboard.editGreeting')}</button>
                       )}
                     </div>
                   </div>
@@ -308,13 +296,13 @@ export default function Dashboard() {
             boxShadow: 'var(--shadow-card)',
           }}>
             <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-muted)', margin: '0 0 var(--space-4)' }}>
-              סטטיסטיקה
+              {t('dashboard.stats')}
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {[
-                { label: 'אנשי קשר',        value: contacts.length, color: 'var(--color-text-primary)' },
-                { label: 'ימי הולדת החודש',  value: thisMonthCount,  color: 'var(--color-primary)'      },
-                { label: 'ברכות שנשלחו',     value: sentCount,       color: 'var(--color-success)'      },
+                { label: t('dashboard.statContacts'),  value: contacts.length, color: 'var(--color-text-primary)' },
+                { label: t('dashboard.statThisMonth'), value: thisMonthCount,  color: 'var(--color-primary)'      },
+                { label: t('dashboard.statSent'),      value: sentCount,       color: 'var(--color-success)'      },
               ].map(({ label, value, color }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-label-max)' }}>{label}</span>
@@ -332,11 +320,11 @@ export default function Dashboard() {
             boxShadow: 'var(--shadow-card)',
           }}>
             <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-muted)', margin: '0 0 var(--space-1)' }}>
-              פעילות אחרונה
+              {t('dashboard.recentActivity')}
             </h3>
             {recentActivity.length === 0 ? (
               <p style={{ fontSize: 13, color: 'var(--color-text-faint)', textAlign: 'center', margin: '14px 0 0' }}>
-                אין פעילות אחרונה
+                {t('dashboard.noActivity')}
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}>
@@ -362,7 +350,7 @@ export default function Dashboard() {
       {showAddModal && (
         <AddContactModal
           onClose={() => setShowAddModal(false)}
-          onSuccess={handleContactAdded}
+          onSuccess={() => { setShowAddModal(false); setRefreshKey(k => k + 1) }}
         />
       )}
     </main>

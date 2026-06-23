@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import Navbar from '../Navbar/Navbar'
 import Footer from '../Footer/Footer'
+import { useLanguage } from '../../contexts/LanguageContext'
 
 const navVariant = {
   '/':               'landing',
@@ -26,12 +27,13 @@ const pageBg = {
 
 export default function Layout() {
   const { pathname } = useLocation()
+  const { dir } = useLanguage()
   const variant = navVariant[pathname] ?? 'landing'
   const bg      = pageBg[pathname]    ?? 'var(--color-bg)'
 
   return (
     <div
-      dir="rtl"
+      dir={dir}
       style={{
         minHeight: '100vh',
         fontFamily: 'var(--font-family)',

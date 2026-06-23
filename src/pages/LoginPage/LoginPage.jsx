@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { useLanguage } from '../../contexts/LanguageContext'
 
 const inputBase = {
   width: '100%',
@@ -20,25 +21,36 @@ function isPassValid(v)  { return v.length >= 6 }
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
+
   const [email,       setEmail]       = useState('')
   const [password,    setPassword]    = useState('')
   const [touched,     setTouched]     = useState(false)
   const [submitting,  setSubmitting]  = useState(false)
   const [serverError, setServerError] = useState('')
 
-  const emailOk = isEmailValid(email)
-  const passOk  = isPassValid(password)
+  const emailOk  = isEmailValid(email)
+  const passOk   = isPassValid(password)
   const emailErr = touched && !emailOk
   const passErr  = touched && !passOk
   const showError = emailErr || passErr || !!serverError
 
   const errorMsg = serverError
     ? serverError
-    : (emailErr && passErr)
-    ? 'נא להזין כתובת אימייל וסיסמה תקינות'
-    : emailErr
-    ? 'כתובת האימייל אינה תקינה'
-    : 'הסיסמה חייבת להכיל לפחות 6 תווים'
+    : (emailErr && passErr) ? t('login.errorBoth')
+    : emailErr              ? t('login.errorEmail')
+    :                         t('login.errorPass')
+
+  async function handleGoogleLogin() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + '/dashboard' },
+    })
+    if (error) {
+      console.error('Google login error:', error)
+      setServerError(t('login.errorGoogle'))
+    }
+  }
 
   async function submit() {
     setServerError('')
@@ -48,7 +60,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     setSubmitting(false)
 
-    if (error) { setServerError('אימייל או סיסמה שגויים'); return }
+    if (error) { setServerError(t('login.errorWrong')); return }
     navigate('/dashboard')
   }
 
@@ -69,17 +81,16 @@ export default function LoginPage() {
           <h1 style={{
             fontSize: 'var(--font-size-page-title-min)',
             fontWeight: 'var(--font-weight-page-title)',
-            margin: '0 0 6px',
-            textAlign: 'center',
+            margin: '0 0 6px', textAlign: 'center',
             letterSpacing: 'var(--letter-spacing-page-title)',
             color: 'var(--color-text-primary)',
-          }}>כניסה לחשבון</h1>
+          }}>{t('login.title')}</h1>
           <p style={{
             textAlign: 'center',
             color: 'var(--color-text-muted)',
             fontSize: 'var(--font-size-label-max)',
             margin: '0 0 var(--space-6)',
-          }}>היכנס כדי לנהל את ימי ההולדת שלך</p>
+          }}>{t('login.subtitle')}</p>
 
           {showError && (
             <div style={{
@@ -88,8 +99,7 @@ export default function LoginPage() {
               border: '1px solid var(--color-border-error)',
               color: 'var(--color-error-text)',
               padding: '10px 12px', borderRadius: 'var(--radius-sm)',
-              fontSize: 13, fontWeight: 600,
-              marginBottom: 'var(--space-4)',
+              fontSize: 13, fontWeight: 600, marginBottom: 'var(--space-4)',
             }}>
               <span style={{
                 width: 16, height: 16, borderRadius: '50%',
@@ -101,7 +111,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>אימייל</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('login.email')}</label>
           <input
             type="email" placeholder="name@email.com" dir="ltr"
             value={email} onChange={e => setEmail(e.target.value)}
@@ -110,7 +120,7 @@ export default function LoginPage() {
 
           <div style={{ height: 'var(--space-4)' }} />
 
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>סיסמה</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('login.password')}</label>
           <input
             type="password" placeholder="••••••••" dir="ltr"
             value={password} onChange={e => setPassword(e.target.value)}
@@ -131,9 +141,8 @@ export default function LoginPage() {
               opacity: submitting ? 0.7 : 1,
               boxShadow: 'var(--shadow-btn-primary)',
             }}
-          >{submitting ? '...' : 'כניסה'}</button>
+          >{submitting ? '...' : t('login.submit')}</button>
 
-          {/* Divider */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0' }}>
             <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
             <span style={{ fontSize: 'var(--font-size-label-min)', color: 'var(--color-text-faint)' }}>או</span>
@@ -141,7 +150,7 @@ export default function LoginPage() {
           </div>
 
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={handleGoogleLogin}
             style={{
               width: '100%', padding: 12,
               borderRadius: 'var(--radius-sm)',
@@ -158,7 +167,7 @@ export default function LoginPage() {
               background: 'conic-gradient(#EA4335,#FBBC05,#34A853,#4285F4)',
               flexShrink: 0,
             }} />
-            המשך עם Google
+            {t('login.googleBtn')}
           </button>
         </div>
 
@@ -168,8 +177,10 @@ export default function LoginPage() {
           color: 'var(--color-text-muted)',
           margin: 'var(--space-5) 0 0',
         }}>
-          אין לך חשבון?{' '}
-          <span onClick={() => navigate('/register')} style={{ color: 'var(--color-primary)', fontWeight: 700, cursor: 'pointer' }}>הרשמה</span>
+          {t('login.noAccount')}{' '}
+          <span onClick={() => navigate('/register')} style={{ color: 'var(--color-primary)', fontWeight: 700, cursor: 'pointer' }}>
+            {t('login.registerLink')}
+          </span>
         </p>
       </div>
     </div>

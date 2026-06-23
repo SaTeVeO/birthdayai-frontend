@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 import * as XLSX from 'xlsx'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import { useLanguage } from '../../contexts/LanguageContext'
+import { getBirthdayLabel } from '../../translations/translations'
 import BirthdayPicker from '../../components/BirthdayPicker/BirthdayPicker'
 import AddContactModal from '../../components/AddContactModal/AddContactModal'
-
-const MONTHS_HE = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר']
 
 const AVATAR_SLOTS = [
   { bg: 'var(--avatar-1-bg)', color: 'var(--avatar-1-text)' },
@@ -13,6 +13,12 @@ const AVATAR_SLOTS = [
   { bg: 'var(--avatar-3-bg)', color: 'var(--avatar-3-text)' },
   { bg: 'var(--avatar-4-bg)', color: 'var(--avatar-4-text)' },
   { bg: 'var(--avatar-5-bg)', color: 'var(--avatar-5-text)' },
+]
+
+const GENDERS = [
+  { key: 'unknown', emoji: '❓' },
+  { key: 'male',    emoji: '👨' },
+  { key: 'female',  emoji: '👩' },
 ]
 
 function parseBirthday(str) {
@@ -29,17 +35,6 @@ function daysUntil(birthday) {
   return Math.round((next - today) / 86400000)
 }
 
-function birthdayLabel(birthday) {
-  const { month, day } = parseBirthday(birthday)
-  return `${day} ב${MONTHS_HE[month]}`
-}
-
-function daysText(days) {
-  if (days === 0) return 'היום!'
-  if (days === 1) return 'מחר'
-  return `בעוד ${days} ימים`
-}
-
 function formatDisplayDate(iso) {
   if (!iso) return ''
   const [y, m, d] = iso.split('-')
@@ -54,7 +49,6 @@ function expandYear(yStr) {
 
 function parseImportDate(val) {
   if (val == null || val === '') return ''
-  // Excel date serial
   if (typeof val === 'number') {
     const date = new Date(Math.round((val - 25569) * 86400 * 1000))
     const y = date.getUTCFullYear()
@@ -63,9 +57,7 @@ function parseImportDate(val) {
     return `${y}-${m}-${d}`
   }
   const s = String(val).trim()
-  // Already ISO: YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
-  // DD/MM/YYYY, DD.MM.YYYY, DD-MM-YYYY (and 2-digit year variants)
   const match = s.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2,4})$/)
   if (match) {
     const d = match[1].padStart(2, '0')
@@ -292,7 +284,10 @@ function ImportPreviewModal({ contacts: initialContacts, onClose, onConfirm, sav
 }
 
 function EditContactModal({ contact, onClose, onSuccess }) {
+  const { t } = useLanguage()
+
   const [name,         setName]         = useState(contact.name || '')
+  const [gender,       setGender]       = useState(contact.gender || 'unknown')
   const [birthday,     setBirthday]     = useState(contact.birthday || '')
   const [relationship, setRelationship] = useState(contact.relationship || '')
   const [phone,        setPhone]        = useState(contact.phone || '')
@@ -304,16 +299,23 @@ function EditContactModal({ contact, onClose, onSuccess }) {
   const [error,  setError]  = useState('')
   const [saving, setSaving] = useState(false)
 
+  const genderLabels = {
+    unknown: t('contact.genderUnknown'),
+    male:    t('contact.male'),
+    female:  t('contact.female'),
+  }
+
   async function handleSave() {
     setError('')
-    if (!name.trim()) { setError('נא להזין שם מלא'); return }
-    if (!birthday)    { setError('נא להזין תאריך לידה'); return }
+    if (!name.trim()) { setError(t('contact.errorName')); return }
+    if (!birthday)    { setError(t('contact.errorBirthday')); return }
 
     setSaving(true)
     const { error: updateError } = await supabase
       .from('contacts')
       .update({
         name:         name.trim(),
+        gender,
         birthday,
         relationship: relationship.trim() || null,
         phone:        phone.trim()        || null,
@@ -327,7 +329,7 @@ function EditContactModal({ contact, onClose, onSuccess }) {
 
     setSaving(false)
     if (updateError) {
-      setError('שגיאה בעדכון: ' + updateError.message)
+      setError(t('contact.errorSave') + updateError.message)
     } else {
       onSuccess()
     }
@@ -357,7 +359,7 @@ function EditContactModal({ contact, onClose, onSuccess }) {
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-6)' }}>
           <h2 style={{ fontSize: 'var(--font-size-page-title-min)', fontWeight: 800, margin: 0, color: 'var(--color-text-primary)' }}>
-            עריכת איש קשר
+            {t('contact.editTitle')}
           </h2>
           <button
             onClick={onClose}
@@ -379,11 +381,38 @@ function EditContactModal({ contact, onClose, onSuccess }) {
           </div>
         )}
 
-        <label style={labelStyle}>שם מלא <span style={{ color: 'var(--color-error)' }}>*</span></label>
+        {/* Name */}
+        <label style={labelStyle}>
+          {t('contact.name')} <span style={{ color: 'var(--color-error)' }}>*</span>
+        </label>
         <input type="text" dir="rtl" value={name} onChange={e => setName(e.target.value)}
-          style={{ ...inputStyle, marginBottom: 'var(--space-4)' }} />
+          style={{ ...inputStyle, marginBottom: 'var(--space-3)' }} />
 
-        <label style={labelStyle}>תאריך לידה <span style={{ color: 'var(--color-error)' }}>*</span></label>
+        {/* Gender */}
+        <label style={{ ...labelStyle, marginBottom: 8 }}>{t('contact.gender')}</label>
+        <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
+          {GENDERS.map(g => (
+            <button
+              key={g.key}
+              type="button"
+              onClick={() => setGender(g.key)}
+              style={{
+                flex: 1, padding: '8px 4px',
+                borderRadius: 'var(--radius-sm)',
+                border: gender === g.key ? '1.5px solid var(--color-primary)' : '1.5px solid var(--color-border)',
+                background: gender === g.key ? 'var(--color-secondary)' : 'transparent',
+                color: gender === g.key ? 'var(--color-secondary-text)' : 'var(--color-text-muted)',
+                fontWeight: gender === g.key ? 700 : 600,
+                fontSize: 13, cursor: 'pointer',
+              }}
+            >{g.emoji} {genderLabels[g.key]}</button>
+          ))}
+        </div>
+
+        {/* Birthday */}
+        <label style={labelStyle}>
+          {t('contact.birthday')} <span style={{ color: 'var(--color-error)' }}>*</span>
+        </label>
         <BirthdayPicker
           value={birthday}
           onChange={setBirthday}
@@ -391,24 +420,29 @@ function EditContactModal({ contact, onClose, onSuccess }) {
           style={{ marginBottom: 'var(--space-4)' }}
         />
 
-        <label style={labelStyle}>קשר</label>
-        <input type="text" dir="rtl" placeholder="חבר, אחות, עמית לעבודה..." value={relationship} onChange={e => setRelationship(e.target.value)}
+        {/* Relationship */}
+        <label style={labelStyle}>{t('contact.relationship')}</label>
+        <input type="text" dir="rtl" placeholder={t('contact.relPlaceholder')} value={relationship} onChange={e => setRelationship(e.target.value)}
           style={{ ...inputStyle, marginBottom: 'var(--space-4)' }} />
 
-        <label style={labelStyle}>טלפון</label>
-        <input type="tel" dir="ltr" placeholder="050-1234567" value={phone} onChange={e => setPhone(e.target.value)}
+        {/* Phone */}
+        <label style={labelStyle}>{t('contact.phone')}</label>
+        <input type="tel" dir="ltr" placeholder={t('contact.phonePlaceholder')} value={phone} onChange={e => setPhone(e.target.value)}
           style={{ ...inputStyle, marginBottom: 'var(--space-4)' }} />
 
-        <label style={labelStyle}>אימייל</label>
+        {/* Email */}
+        <label style={labelStyle}>{t('contact.email')}</label>
         <input type="email" dir="ltr" placeholder="name@email.com" value={email} onChange={e => setEmail(e.target.value)}
           style={{ ...inputStyle, marginBottom: 'var(--space-4)' }} />
 
-        <label style={labelStyle}>תחביבים</label>
-        <input type="text" dir="rtl" placeholder="ריצה, ציור, מוסיקה (מופרד בפסיקים)" value={hobbies} onChange={e => setHobbies(e.target.value)}
+        {/* Hobbies */}
+        <label style={labelStyle}>{t('contact.hobbies')}</label>
+        <input type="text" dir="rtl" placeholder={t('contact.hobbiesPlaceholder')} value={hobbies} onChange={e => setHobbies(e.target.value)}
           style={{ ...inputStyle, marginBottom: 'var(--space-4)' }} />
 
-        <label style={labelStyle}>הערות</label>
-        <textarea dir="rtl" placeholder="פרטים נוספים..." rows={3} value={notes} onChange={e => setNotes(e.target.value)}
+        {/* Notes */}
+        <label style={labelStyle}>{t('contact.notes')}</label>
+        <textarea dir="rtl" placeholder={t('contact.notesPlaceholder')} rows={3} value={notes} onChange={e => setNotes(e.target.value)}
           style={{ ...inputStyle, resize: 'vertical', marginBottom: 'var(--space-6)' }} />
 
         <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
@@ -424,7 +458,7 @@ function EditContactModal({ contact, onClose, onSuccess }) {
               opacity: saving ? 0.7 : 1,
               boxShadow: 'var(--shadow-btn-primary)',
             }}
-          >{saving ? 'שומר...' : 'שמור שינויים'}</button>
+          >{saving ? t('contact.saving') : t('contact.saveBtn')}</button>
           <button
             onClick={onClose}
             style={{
@@ -436,7 +470,7 @@ function EditContactModal({ contact, onClose, onSuccess }) {
               fontWeight: 600, fontSize: 'var(--font-size-body-min)',
               cursor: 'pointer',
             }}
-          >ביטול</button>
+          >{t('contact.cancel')}</button>
         </div>
       </div>
     </div>
@@ -445,10 +479,12 @@ function EditContactModal({ contact, onClose, onSuccess }) {
 
 export default function ContactsPage() {
   const { user }   = useAuth()
-  const [contacts,     setContacts]     = useState([])
-  const [loading,      setLoading]      = useState(true)
-  const [editTarget,   setEditTarget]   = useState(null)
-  const [deletingId,   setDeletingId]   = useState(null)
+  const { language, t } = useLanguage()
+
+  const [contacts,      setContacts]      = useState([])
+  const [loading,       setLoading]       = useState(true)
+  const [editTarget,    setEditTarget]    = useState(null)
+  const [deletingId,    setDeletingId]    = useState(null)
   const [showAddModal,  setShowAddModal]  = useState(false)
   const [importPreview, setImportPreview] = useState(null)
   const [importing,     setImporting]     = useState(false)
@@ -459,6 +495,11 @@ export default function ContactsPage() {
     window.addEventListener('openAddContact', handler)
     return () => window.removeEventListener('openAddContact', handler)
   }, [])
+
+  function daysText(days) {
+    if (days === 1) return t('dashboard.tomorrow')
+    return t('dashboard.inDays', { n: days })
+  }
 
   function handleExport() {
     const rows = contacts.map(c => ({
@@ -485,9 +526,6 @@ export default function ContactsPage() {
 
   function handleImportFile(e) {
     const file = e.target.files[0]
-    console.log('file selected:', file)
-    console.log('file name:', file?.name)
-    console.log('file size:', file?.size)
     if (!file) return
 
     const reader = new FileReader()
@@ -495,11 +533,8 @@ export default function ContactsPage() {
     reader.onload = evt => {
       try {
         const wb = XLSX.read(evt.target.result, { type: 'array' })
-        console.log('workbook sheets:', wb.SheetNames)
         const ws = wb.Sheets[wb.SheetNames[0]]
         const rows = XLSX.utils.sheet_to_json(ws, { raw: true })
-        console.log('parsed rows:', rows)
-        if (rows.length > 0) console.log('first row keys:', Object.keys(rows[0]))
 
         const parsed = rows
           .map(row => ({
@@ -515,9 +550,7 @@ export default function ContactsPage() {
           }))
           .filter(r => r.name)
 
-        console.log('contacts after mapping:', parsed)
         if (parsed.length === 0) {
-          console.warn('0 contacts found — check that column headers match exactly')
           alert('לא נמצאו אנשי קשר. בדוק שכותרות העמודות תואמות בדיוק: שם, תאריך לידה, קרבה, טלפון, אימייל, תחביבים, הערות')
         }
         setImportPreview(parsed)
@@ -555,7 +588,7 @@ export default function ContactsPage() {
     const enriched = (data ?? []).map((c, i) => ({
       ...c,
       days:        daysUntil(c.birthday),
-      dateLabel:   birthdayLabel(c.birthday),
+      dateLabel:   getBirthdayLabel(c.birthday, language),
       initial:     (c.name || '?')[0],
       avatarBg:    AVATAR_SLOTS[i % AVATAR_SLOTS.length].bg,
       avatarColor: AVATAR_SLOTS[i % AVATAR_SLOTS.length].color,
@@ -567,7 +600,7 @@ export default function ContactsPage() {
   useEffect(() => {
     if (!user) return
     loadContacts()
-  }, [user])
+  }, [user, language])
 
   async function handleDelete(contactId) {
     setDeletingId(contactId)
@@ -579,7 +612,7 @@ export default function ContactsPage() {
   if (loading) {
     return (
       <main style={{ maxWidth: 800, margin: '0 auto', padding: 'var(--space-8)', display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
-        <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-body-min)' }}>טוען...</span>
+        <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-body-min)' }}>{t('contacts.loading')}</span>
       </main>
     )
   }
@@ -594,9 +627,9 @@ export default function ContactsPage() {
             fontWeight: 'var(--font-weight-page-title)',
             letterSpacing: 'var(--letter-spacing-page-title)',
             margin: 0, color: 'var(--color-text-primary)',
-          }}>אנשי קשר</h1>
+          }}>{t('contacts.title')}</h1>
           <span style={{ fontSize: 'var(--font-size-label-max)', color: 'var(--color-text-muted)' }}>
-            {contacts.length} סה״כ
+            {t('contacts.total', { n: contacts.length })}
           </span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
@@ -610,7 +643,7 @@ export default function ContactsPage() {
               color: 'var(--color-text-muted)',
               fontWeight: 600, fontSize: 13, cursor: 'pointer',
             }}
-          >הורד תבנית</button>
+          >{t('contacts.downloadTemplate')}</button>
           <button
             onClick={() => fileInputRef.current?.click()}
             style={{
@@ -621,7 +654,7 @@ export default function ContactsPage() {
               color: 'var(--color-text-muted)',
               fontWeight: 600, fontSize: 13, cursor: 'pointer',
             }}
-          >ייבוא מאקסל</button>
+          >{t('contacts.importExcel')}</button>
           <button
             onClick={handleExport}
             disabled={contacts.length === 0}
@@ -635,7 +668,7 @@ export default function ContactsPage() {
               cursor: contacts.length === 0 ? 'not-allowed' : 'pointer',
               opacity: contacts.length === 0 ? 0.5 : 1,
             }}
-          >ייצוא לאקסל</button>
+          >{t('contacts.exportExcel')}</button>
           <input
             ref={fileInputRef}
             type="file"
@@ -656,10 +689,10 @@ export default function ContactsPage() {
         }}>
           <div style={{ fontSize: 36, marginBottom: 'var(--space-4)' }}>👤</div>
           <h3 style={{ fontSize: 'var(--font-size-card-title-max)', fontWeight: 700, margin: '0 0 var(--space-2)', color: 'var(--color-text-primary)' }}>
-            אין אנשי קשר עדיין
+            {t('contacts.noContacts')}
           </h3>
           <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-body-min)', margin: 0 }}>
-            הוסף אנשי קשר מלוח הבקרה כדי שיופיעו כאן.
+            {t('contacts.noContactsDesc')}
           </p>
         </div>
       ) : (
@@ -695,13 +728,13 @@ export default function ContactsPage() {
                       color: 'var(--color-accent-badge-text)',
                       background: 'var(--color-accent-badge-bg)',
                       padding: '3px var(--space-2)', borderRadius: 'var(--radius-full)',
-                    }}>היום!</span>
+                    }}>{t('dashboard.today')}</span>
                   )}
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 3 }}>
                   {[
                     c.relationship,
-                    c.dateLabel && `${c.dateLabel}`,
+                    c.dateLabel,
                     c.days > 0 && daysText(c.days),
                   ].filter(Boolean).join(' · ')}
                 </div>
@@ -718,7 +751,7 @@ export default function ContactsPage() {
                     fontWeight: 600, fontSize: 13,
                     border: 'none', cursor: 'pointer',
                   }}
-                >ערוך</button>
+                >{t('contacts.edit')}</button>
                 <button
                   onClick={() => handleDelete(c.id)}
                   disabled={deletingId === c.id}
@@ -732,7 +765,7 @@ export default function ContactsPage() {
                     cursor: deletingId === c.id ? 'not-allowed' : 'pointer',
                     opacity: deletingId === c.id ? 0.6 : 1,
                   }}
-                >{deletingId === c.id ? '...' : 'מחק'}</button>
+                >{deletingId === c.id ? '...' : t('contacts.delete')}</button>
               </div>
             </div>
           ))}

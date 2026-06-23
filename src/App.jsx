@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { LanguageProvider } from './contexts/LanguageContext'
 import Layout from './components/Layout/Layout'
 import LandingPage from './pages/LandingPage/LandingPage'
 import LoginPage from './pages/LoginPage/LoginPage'
@@ -19,6 +20,7 @@ function ProtectedRoute({ children }) {
 
 export default function App() {
   return (
+    <LanguageProvider>
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
@@ -33,5 +35,6 @@ export default function App() {
         </Route>
       </Routes>
     </BrowserRouter>
+    </LanguageProvider>
   )
 }
