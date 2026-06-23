@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../contexts/LanguageContext'
@@ -45,6 +45,28 @@ export default function AddContactModal({ onClose, onSuccess }) {
   const [error,        setError]        = useState('')
   const [saving,       setSaving]       = useState(false)
 
+  // Restore draft on mount (handles iPhone app-switch resets)
+  useEffect(() => {
+    const draft = localStorage.getItem('draft_contact')
+    if (draft) {
+      try {
+        const data = JSON.parse(draft)
+        setName(data.name || '')
+        setBirthday(data.birthday || '')
+        setRelationship(data.relationship || '')
+        setPhone(data.phone || '')
+        setEmail(data.email || '')
+        setHobbies(data.hobbies || '')
+        setNotes(data.notes || '')
+        setGender(data.gender || 'unknown')
+      } catch {}
+    }
+  }, [])
+
+  function saveDraft({ name, birthday, relationship, phone, email, hobbies, notes, gender }) {
+    localStorage.setItem('draft_contact', JSON.stringify({ name, birthday, relationship, phone, email, hobbies, notes, gender }))
+  }
+
   async function handleSubmit() {
     setError('')
     if (!name.trim()) { setError(t('contact.errorName'));     return }
@@ -71,6 +93,7 @@ export default function AddContactModal({ onClose, onSuccess }) {
     if (insertError) {
       setError(t('contact.errorSave') + insertError.message)
     } else {
+      localStorage.removeItem('draft_contact')
       onSuccess()
     }
   }
@@ -83,7 +106,7 @@ export default function AddContactModal({ onClose, onSuccess }) {
 
   return (
     <div
-      onClick={onClose}
+      onClick={() => { localStorage.removeItem('draft_contact'); onClose() }}
       style={{
         position: 'fixed', inset: 0,
         background: 'rgba(0,0,0,.5)',
@@ -110,7 +133,7 @@ export default function AddContactModal({ onClose, onSuccess }) {
             {t('contact.addTitle')}
           </h2>
           <button
-            onClick={onClose}
+            onClick={() => { localStorage.removeItem('draft_contact'); onClose() }}
             style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--color-text-muted)', lineHeight: 1, padding: 4 }}
           >✕</button>
         </div>
@@ -141,7 +164,7 @@ export default function AddContactModal({ onClose, onSuccess }) {
         </label>
         <input
           type="text" dir="rtl" placeholder={t('contact.namePlaceholder')}
-          value={name} onChange={e => setName(e.target.value)}
+          value={name} onChange={e => { setName(e.target.value); saveDraft({ name: e.target.value, birthday, relationship, phone, email, hobbies, notes, gender }) }}
           style={{ ...inputStyle, marginBottom: 'var(--space-3)' }}
         />
 
@@ -152,7 +175,7 @@ export default function AddContactModal({ onClose, onSuccess }) {
             <button
               key={g.key}
               type="button"
-              onClick={() => setGender(g.key)}
+              onClick={() => { setGender(g.key); saveDraft({ name, birthday, relationship, phone, email, hobbies, notes, gender: g.key }) }}
               style={{
                 flex: 1, padding: '8px 4px',
                 borderRadius: 'var(--radius-sm)',
@@ -172,7 +195,7 @@ export default function AddContactModal({ onClose, onSuccess }) {
         </label>
         <BirthdayPicker
           value={birthday}
-          onChange={setBirthday}
+          onChange={val => { setBirthday(val); saveDraft({ name, birthday: val, relationship, phone, email, hobbies, notes, gender }) }}
           inputStyle={inputStyle}
           style={{ marginBottom: 'var(--space-4)' }}
         />
@@ -181,7 +204,7 @@ export default function AddContactModal({ onClose, onSuccess }) {
         <label style={labelStyle}>{t('contact.relationship')}</label>
         <input
           type="text" dir="rtl" placeholder={t('contact.relPlaceholder')}
-          value={relationship} onChange={e => setRelationship(e.target.value)}
+          value={relationship} onChange={e => { setRelationship(e.target.value); saveDraft({ name, birthday, relationship: e.target.value, phone, email, hobbies, notes, gender }) }}
           style={{ ...inputStyle, marginBottom: 'var(--space-4)' }}
         />
 
@@ -189,7 +212,7 @@ export default function AddContactModal({ onClose, onSuccess }) {
         <label style={labelStyle}>{t('contact.phone')}</label>
         <input
           type="tel" dir="ltr" placeholder={t('contact.phonePlaceholder')}
-          value={phone} onChange={e => setPhone(e.target.value)}
+          value={phone} onChange={e => { setPhone(e.target.value); saveDraft({ name, birthday, relationship, phone: e.target.value, email, hobbies, notes, gender }) }}
           style={{ ...inputStyle, marginBottom: 'var(--space-4)' }}
         />
 
@@ -197,7 +220,7 @@ export default function AddContactModal({ onClose, onSuccess }) {
         <label style={labelStyle}>{t('contact.email')}</label>
         <input
           type="email" dir="ltr" placeholder="name@email.com"
-          value={email} onChange={e => setEmail(e.target.value)}
+          value={email} onChange={e => { setEmail(e.target.value); saveDraft({ name, birthday, relationship, phone, email: e.target.value, hobbies, notes, gender }) }}
           style={{ ...inputStyle, marginBottom: 'var(--space-4)' }}
         />
 
@@ -205,7 +228,7 @@ export default function AddContactModal({ onClose, onSuccess }) {
         <label style={labelStyle}>{t('contact.hobbies')}</label>
         <input
           type="text" dir="rtl" placeholder={t('contact.hobbiesPlaceholder')}
-          value={hobbies} onChange={e => setHobbies(e.target.value)}
+          value={hobbies} onChange={e => { setHobbies(e.target.value); saveDraft({ name, birthday, relationship, phone, email, hobbies: e.target.value, notes, gender }) }}
           style={{ ...inputStyle, marginBottom: 'var(--space-4)' }}
         />
 
@@ -213,7 +236,7 @@ export default function AddContactModal({ onClose, onSuccess }) {
         <label style={labelStyle}>{t('contact.notes')}</label>
         <textarea
           dir="rtl" placeholder={t('contact.notesPlaceholder')} rows={3}
-          value={notes} onChange={e => setNotes(e.target.value)}
+          value={notes} onChange={e => { setNotes(e.target.value); saveDraft({ name, birthday, relationship, phone, email, hobbies, notes: e.target.value, gender }) }}
           style={{ ...inputStyle, resize: 'vertical', marginBottom: 'var(--space-6)' }}
         />
 
@@ -233,7 +256,7 @@ export default function AddContactModal({ onClose, onSuccess }) {
             }}
           >{saving ? t('contact.saving') : t('contact.addBtn')}</button>
           <button
-            onClick={onClose}
+            onClick={() => { localStorage.removeItem('draft_contact'); onClose() }}
             style={{
               padding: '13px 20px',
               borderRadius: 'var(--radius-sm)',
