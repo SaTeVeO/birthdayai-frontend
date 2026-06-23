@@ -362,7 +362,7 @@ export default function EditGreeting() {
 
   const firstName     = contact.name?.split(' ')[0] ?? contact.name
   const over          = text.length > MAX
-  const isHebrew      = greetingLang === 'he' || greetingLang === 'hebrew'
+  const isHebrew      = greetingLang === 'he' || greetingLang === 'hebrew' || greetingLang === 'עברית'
   const textDirection = isHebrew ? 'rtl' : 'ltr'
   const textAlign     = isHebrew ? 'right' : 'left'
   console.log('language:', greetingLang, 'direction:', textDirection)
@@ -576,23 +576,30 @@ export default function EditGreeting() {
             </span>
           </div>
         ) : (
-          <div dir={textDirection}>
-            <textarea
-              value={text}
-              onChange={handleTextChange}
-              dir={textDirection}
-              className={isHebrew ? 'greeting-rtl' : 'greeting-ltr'}
-              style={{
-                width: '100%', minHeight: '150px',
-                padding: '14px', fontSize: '15px', lineHeight: '1.6',
-                borderRadius: '8px', border: '1px solid var(--color-border)',
-                color: 'var(--color-text-primary)', background: 'var(--color-surface)',
-                resize: 'vertical', outline: 'none',
-                fontFamily: 'inherit', boxSizing: 'border-box',
-                direction: textDirection, textAlign, unicodeBidi: 'embed',
-              }}
-            />
-          </div>
+          <textarea
+            value={text}
+            onChange={handleTextChange}
+            dir={isHebrew ? 'rtl' : 'ltr'}
+            className={isHebrew ? 'greeting-rtl' : 'greeting-ltr'}
+            style={{
+              width: '100%',
+              minHeight: '150px',
+              padding: '14px',
+              fontSize: '15px',
+              lineHeight: '1.6',
+              borderRadius: '8px',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text-primary)',
+              background: 'var(--color-surface)',
+              resize: 'vertical',
+              outline: 'none',
+              fontFamily: 'inherit',
+              boxSizing: 'border-box',
+              direction: isHebrew ? 'rtl' : 'ltr',
+              textAlign: isHebrew ? 'right' : 'left',
+              unicodeBidi: 'isolate',
+            }}
+          />
         )}
 
         {/* Bottom row: regenerate + char counter + auto-save status */}
