@@ -362,9 +362,9 @@ export default function EditGreeting() {
 
   const firstName     = contact.name?.split(' ')[0] ?? contact.name
   const over          = text.length > MAX
-  const isRTL         = greetingLang === 'he' || greetingLang === 'hebrew' || greetingLang === 'עברית'
-  const textDirection = isRTL ? 'rtl' : 'ltr'
-  const textAlign     = isRTL ? 'right' : 'left'
+  const isHebrew      = greetingLang === 'he' || greetingLang === 'hebrew'
+  const textDirection = isHebrew ? 'rtl' : 'ltr'
+  const textAlign     = isHebrew ? 'right' : 'left'
   console.log('language:', greetingLang, 'direction:', textDirection)
   const hasPhone  = !!contact.phone?.replace(/[^0-9]/g, '')
   const hasEmail  = !!contact.email
@@ -581,6 +581,7 @@ export default function EditGreeting() {
               value={text}
               onChange={handleTextChange}
               dir={textDirection}
+              className={isHebrew ? 'greeting-rtl' : 'greeting-ltr'}
               style={{
                 width: '100%', minHeight: '150px',
                 padding: '14px', fontSize: '15px', lineHeight: '1.6',

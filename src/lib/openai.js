@@ -77,8 +77,9 @@ export async function generateGreeting(contact, style = 'warm', language = 'he',
     ? contact.hobbies.join(', ')
     : (contact.hobbies || '')
 
-  const FAMILY_HE = 'אח, אחות, אמא, אבא, סבא, סבתא, בן, בת, דוד, דודה, נכד, נכדה, חתן, כלה, גיס, גיסה, בעל, אישה'
-  const FRIEND_HE = 'חבר, חברה, עמית, קולגה, מכר, שכן'
+  const PARENT_GRANDPARENT_HE = 'אמא, אבא, סבתא, סבא, אמא רבתא, סבא רבא'
+  const SIBLING_HE            = 'אח, אחות, גיס, גיסה'
+  const FRIEND_HE             = 'חבר, חברה, עמית, קולגה, מכר, שכן'
 
   function buildSigRules(lang) {
     const { type, name = '', partnerName = '' } = signatureMode
@@ -90,7 +91,6 @@ export async function generateGreeting(contact, style = 'warm', language = 'he',
         : ['Do not add a signature at the end of the greeting.']
     }
     if (type === 'couple' && name && partnerName) {
-      // Always use first name only for the sender in couple mode
       const senderFirst = name.split(' ')[0]
       return lang === 'he'
         ? [`חתום בסוף עם: ${senderFirst} ו${partnerName}`]
@@ -101,7 +101,12 @@ export async function generateGreeting(contact, style = 'warm', language = 'he',
     if (type === 'single' && name) {
       if (lang === 'he') return [
         `בסוף הברכה, חתום עם השם של השולח. שם השולח הוא: ${name}`,
-        `חוקי החתימה:\n- אם הקרבה היא: ${FAMILY_HE} — חתום רק בשם פרטי (המילה הראשונה בלבד)\n- אם הקרבה היא: ${FRIEND_HE} — חתום בשם מלא\n- אל תכתוב [שמך] או [שם] — כתוב את השם האמיתי: ${name}`,
+        `חוקי החתימה:
+- אם הקרבה היא אמא/אבא/סבתא/סבא (${PARENT_GRANDPARENT_HE}): חתום רק עם הקרבה (לדוגמה: "הבן שלך" או "הנכדה שלך") — אל תשתמש בשם
+- אם הקרבה היא אח/אחות (${SIBLING_HE}): חתום בשם פרטי בלבד (המילה הראשונה בלבד)
+- כל קרבה משפחתית אחרת: חתום בשם פרטי בלבד
+- קרבה רחוקה/עמיתים/שכנים (${FRIEND_HE}): חתום בשם מלא
+- אל תכתוב [שמך] או [שם] — כתוב את השם האמיתי: ${name}`,
       ]
       if (lang === 'ru') return [
         `Подпиши поздравление в конце. Имя отправителя: ${name}`,
@@ -154,6 +159,9 @@ export async function generateGreeting(contact, style = 'warm', language = 'he',
     prompt = [
       `כתוב ברכת יום הולדת בעברית בלבד עבור ${firstName}${contact.relationship ? ` שהוא/היא ${contact.relationship} שלי` : ''}.`,
       `השתמש בצורה המגדרית הנכונה: הכינוי הוא ${gp.pronoun}, המילה "שלו/שלה" היא ${gp.possessive}, ואם מדובר בחבר/חברה אז "${gp.friend}".`,
+      contact.relationship && `חוקי פתיחת הברכה:
+- אם הקרבה היא אמא/אבא (${PARENT_GRANDPARENT_HE}): אל תכתוב את השם כלל, פתח עם "אמא היקרה" / "אבא היקר" / "סבתא היקרה" / "סבא היקר"
+- כל קרבה אחרת: פתח עם השם הפרטי (${firstName})`,
       genderedHobby,
       contact.notes && `מידע נוסף: ${contact.notes}.`,
       `סגנון הברכה: ${styleDesc}.`,
