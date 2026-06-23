@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import emailjs from '@emailjs/browser'
 
 // ── Shared modal shell ──────────────────────────────────────────
 function Modal({ title, onClose, children }) {
@@ -156,15 +157,27 @@ function ContactContent() {
   const [message,        setMessage]        = useState('')
   const [contactSuccess, setContactSuccess] = useState(false)
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!name || !email || !message) {
       alert('נא למלא את כל השדות')
       return
     }
-    setContactSuccess(true)
-    setName('')
-    setEmail('')
-    setMessage('')
+
+    try {
+      await emailjs.send(
+        'birthdayai_contact',
+        'template_ivn200f',
+        { from_name: name, from_email: email, message },
+        'umnrwQBgZT6WD9j1D'
+      )
+      setContactSuccess(true)
+      setName('')
+      setEmail('')
+      setMessage('')
+    } catch (error) {
+      console.error('EmailJS error:', error)
+      alert('שגיאה בשליחה, נסה שוב')
+    }
   }
 
   const inputStyle = {
@@ -229,7 +242,7 @@ function ContactContent() {
             color: 'var(--color-text-primary)',
             fontSize: 14, lineHeight: 1.7,
           }}>
-            <div style={{ fontWeight: 700, marginBottom: 4 }}>תודה על פנייתך! נחזור אליך בהקדם.</div>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>תודה על פנייתך! נחזור אליך בהקדם 🙂</div>
             <div style={{ color: 'var(--color-text-muted)' }}>
               לפנייה ישירה:{' '}
               <a href="mailto:birthdayai.contact@gmail.com" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
