@@ -157,17 +157,14 @@ function ContactContent() {
   const [contactSuccess, setContactSuccess] = useState(false)
 
   function handleSubmit() {
-    const subject = encodeURIComponent(`פנייה מ-${name} דרך BirthdayAI`)
-    const body    = encodeURIComponent(`שם: ${name}\nמייל: ${email}\n\nהודעה:\n${message}`)
-    window.open(
-      `mailto:birthdayai.contact@gmail.com?subject=${subject}&body=${body}`,
-      '_blank'
-    )
+    if (!name || !email || !message) {
+      alert('נא למלא את כל השדות')
+      return
+    }
+    setContactSuccess(true)
     setName('')
     setEmail('')
     setMessage('')
-    setContactSuccess(true)
-    setTimeout(() => setContactSuccess(false), 3000)
   }
 
   const inputStyle = {
@@ -223,7 +220,24 @@ function ContactContent() {
           />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {contactSuccess ? (
+          <div style={{
+            padding: '14px 18px',
+            borderRadius: 'var(--radius-sm)',
+            background: 'var(--color-secondary)',
+            border: '1px solid var(--color-border-highlight)',
+            color: 'var(--color-text-primary)',
+            fontSize: 14, lineHeight: 1.7,
+          }}>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>תודה על פנייתך! נחזור אליך בהקדם.</div>
+            <div style={{ color: 'var(--color-text-muted)' }}>
+              לפנייה ישירה:{' '}
+              <a href="mailto:birthdayai.contact@gmail.com" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
+                birthdayai.contact@gmail.com
+              </a>
+            </div>
+          </div>
+        ) : (
           <button
             type="button"
             onClick={handleSubmit}
@@ -236,15 +250,10 @@ function ContactContent() {
               fontWeight: 700, fontSize: 15,
               cursor: 'pointer',
               boxShadow: 'var(--shadow-btn-primary)',
+              alignSelf: 'flex-start',
             }}
           >שלח הודעה</button>
-
-          {contactSuccess && (
-            <span style={{ fontSize: 14, color: 'var(--color-primary)', fontWeight: 600 }}>
-              ההודעה נשלחה ✓
-            </span>
-          )}
-        </div>
+        )}
       </div>
     </>
   )
