@@ -18,6 +18,13 @@ function ProtectedRoute({ children }) {
   return children
 }
 
+function PublicRoute({ children }) {
+  const { user, loading } = useAuth()
+  if (loading) return null
+  if (user) return <Navigate to="/dashboard" replace />
+  return children
+}
+
 export default function App() {
   return (
     <LanguageProvider>
@@ -25,8 +32,8 @@ export default function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route path="/"              element={<LandingPage />} />
-          <Route path="/login"         element={<LoginPage />} />
-          <Route path="/register"      element={<RegisterPage />} />
+          <Route path="/login"         element={<PublicRoute><LoginPage /></PublicRoute>} />
+          <Route path="/register"      element={<PublicRoute><RegisterPage /></PublicRoute>} />
           <Route path="/dashboard"     element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/edit-greeting" element={<ProtectedRoute><EditGreeting /></ProtectedRoute>} />
           <Route path="/settings"          element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />

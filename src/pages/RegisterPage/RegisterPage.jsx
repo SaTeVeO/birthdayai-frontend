@@ -29,6 +29,7 @@ export default function RegisterPage() {
   const [touched,     setTouched]     = useState(false)
   const [submitting,  setSubmitting]  = useState(false)
   const [serverError, setServerError] = useState('')
+  const [registered,  setRegistered]  = useState(false)
 
   const nameOk  = name.trim().length > 0
   const emailOk = isEmailValid(email)
@@ -73,7 +74,59 @@ export default function RegisterPage() {
     }
 
     setSubmitting(false)
-    navigate('/dashboard')
+    setRegistered(true)
+  }
+
+  if (registered) {
+    return (
+      <div style={{
+        flex: 1,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '48px var(--space-5)',
+      }}>
+        <div style={{
+          width: '100%', maxWidth: 420, textAlign: 'center',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border-subtle)',
+          borderRadius: 'var(--radius-lg)',
+          padding: 'var(--space-10) var(--space-8)',
+          boxShadow: '0 4px 20px -4px rgba(17,24,39,.12)',
+        }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: '50%',
+            background: 'var(--color-secondary)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 30, margin: '0 auto var(--space-5)',
+          }}>✉️</div>
+
+          <h2 style={{
+            fontSize: 20, fontWeight: 700,
+            color: 'var(--color-text-primary)',
+            margin: '0 0 var(--space-3)',
+          }}>נשלח אליך מייל אימות!</h2>
+
+          <p style={{
+            fontSize: 15, lineHeight: 1.7,
+            color: 'var(--color-text-muted)',
+            margin: '0 0 var(--space-5)',
+          }}>
+            אנא בדוק את תיבת הדואר שלך ולחץ על הקישור לאישור החשבון.
+            <br />
+            לאחר האישור תועבר אוטומטית לאפליקציה.
+          </p>
+
+          <div style={{
+            padding: '10px 16px',
+            background: 'var(--color-surface-subtle)',
+            border: '1px solid var(--color-border-subtle)',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: 13, color: 'var(--color-text-faint)',
+          }}>
+            לא קיבלת מייל? בדוק בתיקיית הספאם
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
