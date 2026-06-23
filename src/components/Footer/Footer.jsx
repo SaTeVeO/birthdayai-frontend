@@ -151,15 +151,23 @@ function TermsContent() {
 
 // ── Contact modal content ───────────────────────────────────────
 function ContactContent() {
-  const [name,    setName]    = useState('')
-  const [email,   setEmail]   = useState('')
-  const [message, setMessage] = useState('')
+  const [name,           setName]           = useState('')
+  const [email,          setEmail]          = useState('')
+  const [message,        setMessage]        = useState('')
+  const [contactSuccess, setContactSuccess] = useState(false)
 
-  function handleSubmit(e) {
-    e.preventDefault()
-    const subject = encodeURIComponent(`פנייה מ-BirthdayAI${name ? ` – ${name}` : ''}`)
-    const body    = encodeURIComponent(`שם: ${name}\nמייל: ${email}\n\n${message}`)
-    window.location.href = `mailto:birthdayai.contact@gmail.com?subject=${subject}&body=${body}`
+  function handleSubmit() {
+    const subject = encodeURIComponent(`פנייה מ-${name} דרך BirthdayAI`)
+    const body    = encodeURIComponent(`שם: ${name}\nמייל: ${email}\n\nהודעה:\n${message}`)
+    window.open(
+      `mailto:birthdayai.contact@gmail.com?subject=${subject}&body=${body}`,
+      '_blank'
+    )
+    setName('')
+    setEmail('')
+    setMessage('')
+    setContactSuccess(true)
+    setTimeout(() => setContactSuccess(false), 3000)
   }
 
   const inputStyle = {
@@ -183,7 +191,7 @@ function ContactContent() {
         </a>
       </p>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div>
           <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 5, color: 'var(--color-text-primary)' }}>שם</label>
           <input
@@ -192,7 +200,6 @@ function ContactContent() {
             onChange={e => setName(e.target.value)}
             placeholder="הכנס את שמך"
             style={inputStyle}
-            required
           />
         </div>
         <div>
@@ -203,7 +210,6 @@ function ContactContent() {
             onChange={e => setEmail(e.target.value)}
             placeholder="your@email.com"
             style={{ ...inputStyle, direction: 'ltr' }}
-            required
           />
         </div>
         <div>
@@ -214,24 +220,32 @@ function ContactContent() {
             placeholder="כתוב את הודעתך כאן..."
             rows={5}
             style={{ ...inputStyle, resize: 'vertical', minHeight: 110 }}
-            required
           />
         </div>
-        <button
-          type="submit"
-          style={{
-            padding: '11px 24px',
-            borderRadius: 'var(--radius-sm)',
-            border: 'none',
-            background: 'var(--color-primary)',
-            color: 'var(--color-surface)',
-            fontWeight: 700, fontSize: 15,
-            cursor: 'pointer',
-            boxShadow: 'var(--shadow-btn-primary)',
-            alignSelf: 'flex-start',
-          }}
-        >שלח הודעה</button>
-      </form>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            style={{
+              padding: '11px 24px',
+              borderRadius: 'var(--radius-sm)',
+              border: 'none',
+              background: 'var(--color-primary)',
+              color: 'var(--color-surface)',
+              fontWeight: 700, fontSize: 15,
+              cursor: 'pointer',
+              boxShadow: 'var(--shadow-btn-primary)',
+            }}
+          >שלח הודעה</button>
+
+          {contactSuccess && (
+            <span style={{ fontSize: 14, color: 'var(--color-primary)', fontWeight: 600 }}>
+              ההודעה נשלחה ✓
+            </span>
+          )}
+        </div>
+      </div>
     </>
   )
 }
