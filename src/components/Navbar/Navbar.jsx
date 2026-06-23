@@ -71,14 +71,31 @@ export default function Navbar({ variant = 'landing' }) {
 
   useEffect(() => {
     if (!user) return
-    supabase
-      .from('profiles')
-      .select('name')
-      .eq('user_id', user.id)
-      .single()
-      .then(({ data: profile }) => {
-        setDisplayName(profile?.name || user.email || '')
+
+    const fetchProfile = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('user_id', user.id)
+        .single()
+      setDisplayName(data?.name || user.email || '')
+    }
+
+    fetchProfile()
+
+    const subscription = supabase
+      .channel('profile_changes')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        if (payload.new?.name) setDisplayName(payload.new.name)
       })
+      .subscribe()
+
+    return () => { supabase.removeChannel(subscription) }
   }, [user])
 
   const userInitial = displayName
