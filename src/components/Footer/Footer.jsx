@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import emailjs from '@emailjs/browser'
+import { useLanguage } from '../../contexts/LanguageContext'
 
 // ── Shared modal shell ──────────────────────────────────────────
 function Modal({ title, onClose, children }) {
@@ -275,6 +276,7 @@ function ContactContent() {
 // ── Footer ──────────────────────────────────────────────────────
 export default function Footer() {
   const [open, setOpen] = useState(null) // 'privacy' | 'terms' | 'contact' | null
+  const { t } = useLanguage()
 
   return (
     <>
@@ -298,22 +300,19 @@ export default function Footer() {
           </div>
 
           <span style={{ fontSize: 13, color: 'var(--color-text-faint)' }}>
-            © 2026 BirthdayAI · כל הזכויות שמורות
+            {t('footer.rights')}
           </span>
 
           <div style={{ display: 'flex', gap: 20, fontSize: 13, color: 'var(--color-text-muted)' }}>
             {[
-              { key: 'privacy', label: 'פרטיות' },
-              { key: 'terms',   label: 'תנאי שימוש' },
-              { key: 'contact', label: 'צור קשר' },
+              { key: 'privacy', label: t('footer.privacy') },
+              { key: 'terms',   label: t('footer.terms')   },
+              { key: 'contact', label: t('footer.contact') },
             ].map(({ key, label }) => (
               <span
                 key={key}
                 onClick={() => setOpen(key)}
-                style={{
-                  cursor: 'pointer',
-                  transition: 'color .15s',
-                }}
+                style={{ cursor: 'pointer', transition: 'color .15s' }}
                 onMouseEnter={e => e.currentTarget.style.color = 'var(--color-primary)'}
                 onMouseLeave={e => e.currentTarget.style.color = ''}
               >{label}</span>
@@ -323,17 +322,17 @@ export default function Footer() {
       </footer>
 
       {open === 'privacy' && (
-        <Modal title="מדיניות פרטיות" onClose={() => setOpen(null)}>
+        <Modal title={t('footer.privacyTitle')} onClose={() => setOpen(null)}>
           <PrivacyContent />
         </Modal>
       )}
       {open === 'terms' && (
-        <Modal title="תנאי שימוש" onClose={() => setOpen(null)}>
+        <Modal title={t('footer.termsTitle')} onClose={() => setOpen(null)}>
           <TermsContent />
         </Modal>
       )}
       {open === 'contact' && (
-        <Modal title="צור קשר" onClose={() => setOpen(null)}>
+        <Modal title={t('footer.contactTitle')} onClose={() => setOpen(null)}>
           <ContactContent />
         </Modal>
       )}

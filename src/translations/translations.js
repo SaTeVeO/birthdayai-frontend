@@ -208,6 +208,16 @@ export const translations = {
       ctaBandSub:      'הצטרף חינם ותן ל‑AI לדאוג לברכות שלך',
       ctaBandBtn:      'הירשם עכשיו — חינם',
     },
+
+    footer: {
+      rights:       '© 2026 BirthdayAI · כל הזכויות שמורות',
+      privacy:      'פרטיות',
+      terms:        'תנאי שימוש',
+      contact:      'צור קשר',
+      privacyTitle: 'מדיניות פרטיות',
+      termsTitle:   'תנאי שימוש',
+      contactTitle: 'צור קשר',
+    },
   },
 
   /* ─────────────────────── ENGLISH ─────────────────────── */
@@ -420,6 +430,16 @@ export const translations = {
       ctaBandSub:    'Join for free and let AI take care of your greetings',
       ctaBandBtn:    'Sign Up Now — Free',
     },
+
+    footer: {
+      rights:       '© 2026 BirthdayAI · All rights reserved',
+      privacy:      'Privacy',
+      terms:        'Terms of Use',
+      contact:      'Contact Us',
+      privacyTitle: 'Privacy Policy',
+      termsTitle:   'Terms of Use',
+      contactTitle: 'Contact Us',
+    },
   },
 
   /* ─────────────────────── RUSSIAN ─────────────────────── */
@@ -631,6 +651,16 @@ export const translations = {
       ctaBandTitle:  'Готовы начать?',
       ctaBandSub:    'Присоединяйтесь бесплатно и доверьте ИИ ваши поздравления',
       ctaBandBtn:    'Зарегистрироваться — бесплатно',
+    },
+
+    footer: {
+      rights:       '© 2026 BirthdayAI · Все права защищены',
+      privacy:      'Конфиденциальность',
+      terms:        'Условия использования',
+      contact:      'Связаться',
+      privacyTitle: 'Политика конфиденциальности',
+      termsTitle:   'Условия использования',
+      contactTitle: 'Связаться с нами',
     },
   },
 }

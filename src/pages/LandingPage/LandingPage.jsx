@@ -60,7 +60,7 @@ const card = {
 // ── Component ───────────────────────────────────────────────────
 export default function LandingPage() {
   const navigate = useNavigate()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   useEffect(() => {
     injectStyles()
@@ -151,30 +151,24 @@ export default function LandingPage() {
             <span style={{ fontSize: 12, color: 'var(--color-text-faint)', fontWeight: 500 }}>יוני 2026</span>
           </div>
 
-          {/* Today card */}
-          {[
-            {
-              initial: 'ד', bg: 'var(--avatar-1-bg)', color: 'var(--avatar-1-text)',
-              name: 'דנה לוי', sub: 'אחות · 19 ביוני',
-              badge: t('landing.previewToday'),
-              action: <button style={{ ...primaryBtn, padding: '7px 14px', fontSize: 12, whiteSpace: 'nowrap' }}>{t('landing.previewSend')}</button>,
-              highlight: true,
-            },
-            {
-              initial: 'י', bg: 'var(--avatar-2-bg)', color: 'var(--avatar-2-text)',
-              name: 'יוסי כהן', sub: 'חבר · 22 ביוני',
-              days: 'בעוד 3 ימים',
-              action: <button style={{ ...ghostBtn, background: 'var(--color-secondary)', color: 'var(--color-secondary-text)', border: 'none', padding: '7px 14px', fontSize: 12, whiteSpace: 'nowrap' }}>{t('landing.previewEdit')}</button>,
-              highlight: false,
-            },
-            {
-              initial: 'מ', bg: 'var(--avatar-3-bg)', color: 'var(--avatar-3-text)',
-              name: 'מירב גולן', sub: 'קולגה · 28 ביוני',
-              days: 'בעוד 9 ימים',
-              action: <button style={{ ...ghostBtn, background: 'var(--color-secondary)', color: 'var(--color-secondary-text)', border: 'none', padding: '7px 14px', fontSize: 12, whiteSpace: 'nowrap' }}>{t('landing.previewEdit')}</button>,
-              highlight: false,
-            },
-          ].map(({ initial, bg, color, name, sub, badge, days, action, highlight }) => (
+          {/* Demo contacts — language-specific */}
+          {({
+            he: [
+              { initial: 'ד', bg: 'var(--avatar-1-bg)', color: 'var(--avatar-1-text)', name: 'דנה לוי',   sub: 'אחות · 19 ביוני',       badge: t('landing.previewToday'), days: null, highlight: true  },
+              { initial: 'י', bg: 'var(--avatar-2-bg)', color: 'var(--avatar-2-text)', name: 'יוסי כהן',  sub: 'חבר מהצבא · 22 ביוני',  badge: null, days: 'בעוד 3 ימים', highlight: false },
+              { initial: 'מ', bg: 'var(--avatar-3-bg)', color: 'var(--avatar-3-text)', name: 'מירב גולן', sub: 'קולגה · 28 ביוני',       badge: null, days: 'בעוד 9 ימים', highlight: false },
+            ],
+            en: [
+              { initial: 'D', bg: 'var(--avatar-1-bg)', color: 'var(--avatar-1-text)', name: 'Dana Levy',   sub: 'Sister · June 19',     badge: t('landing.previewToday'), days: null,       highlight: true  },
+              { initial: 'Y', bg: 'var(--avatar-2-bg)', color: 'var(--avatar-2-text)', name: 'Yossi Cohen', sub: 'Army friend · June 22', badge: null, days: 'in 3 days', highlight: false },
+              { initial: 'M', bg: 'var(--avatar-3-bg)', color: 'var(--avatar-3-text)', name: 'Mirav Golan', sub: 'Colleague · June 28',   badge: null, days: 'in 9 days', highlight: false },
+            ],
+            ru: [
+              { initial: 'Д', bg: 'var(--avatar-1-bg)', color: 'var(--avatar-1-text)', name: 'Дана Леви',   sub: 'Сестра · 19 июня',         badge: t('landing.previewToday'), days: null,          highlight: true  },
+              { initial: 'Й', bg: 'var(--avatar-2-bg)', color: 'var(--avatar-2-text)', name: 'Йосси Коэн',  sub: 'Друг из армии · 22 июня',  badge: null, days: 'через 3 дня',  highlight: false },
+              { initial: 'М', bg: 'var(--avatar-3-bg)', color: 'var(--avatar-3-text)', name: 'Мирав Голан', sub: 'Коллега · 28 июня',         badge: null, days: 'через 9 дней', highlight: false },
+            ],
+          }[language] ?? []).map(({ initial, bg, color, name, sub, badge, days, highlight }) => (
             <div key={name} style={{
               display: 'flex', alignItems: 'center', gap: 12,
               padding: '12px 14px', borderRadius: 'var(--radius-md)',
@@ -204,7 +198,10 @@ export default function LandingPage() {
                 <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>{sub}</div>
               </div>
               {days && <span style={{ fontSize: 12, color: 'var(--color-text-faint)', fontWeight: 500, whiteSpace: 'nowrap' }}>{days}</span>}
-              {action}
+              {highlight
+                ? <button style={{ ...primaryBtn, padding: '7px 14px', fontSize: 12, whiteSpace: 'nowrap' }}>{t('landing.previewSend')}</button>
+                : <button style={{ ...ghostBtn, background: 'var(--color-secondary)', color: 'var(--color-secondary-text)', border: 'none', padding: '7px 14px', fontSize: 12, whiteSpace: 'nowrap' }}>{t('landing.previewEdit')}</button>
+              }
             </div>
           ))}
         </div>
