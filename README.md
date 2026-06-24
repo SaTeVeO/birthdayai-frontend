@@ -47,7 +47,7 @@ https://birthdayai-ten.vercel.app
 - **PWA:** vite-plugin-pwa
 
 ## תרשים ERD
-![ERD](./erd.png)
+![ERD](./ERD.png)
 
 ## הרצה מקומית
 
