@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { getBirthdayLabel } from '../../translations/translations'
 import AddContactModal from '../../components/AddContactModal/AddContactModal'
+import { usePushNotifications } from '../../hooks/usePushNotifications'
 
 const AVATAR_SLOTS = [
   { bg: 'var(--avatar-1-bg)', color: 'var(--avatar-1-text)' },
@@ -33,6 +34,10 @@ export default function Dashboard() {
   const location  = useLocation()
   const { user }  = useAuth()
   const { language, t } = useLanguage()
+  const { permission, supported, requestPermission } = usePushNotifications(user)
+
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches
 
   const [contacts,       setContacts]       = useState([])
   const [sentCount,      setSentCount]      = useState(0)
@@ -159,6 +164,54 @@ export default function Dashboard() {
           </p>
         </div>
       </div>
+
+      {/* Push notification permission banner */}
+      {permission !== 'granted' && supported && !isIOS && (
+        <div style={{
+          background: '#EEF2FF',
+          border: '1px solid #C7D2FE',
+          borderRadius: 12,
+          padding: 16,
+          marginTop: 'var(--space-5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          flexWrap: 'wrap',
+        }}>
+          <div>
+            <div style={{ fontWeight: 600, color: '#4338CA' }}>🔔 קבל תזכורות על ימי הולדת</div>
+            <div style={{ fontSize: 13, color: '#6366F1', marginTop: 4 }}>
+              אפשר התראות כדי לקבל תזכורת לפני כל יום הולדת
+            </div>
+          </div>
+          <button
+            onClick={requestPermission}
+            style={{
+              background: '#6366F1', color: '#fff',
+              border: 'none', borderRadius: 8,
+              padding: '8px 16px', cursor: 'pointer',
+              fontWeight: 600, fontSize: 14, flexShrink: 0,
+            }}
+          >אפשר התראות</button>
+        </div>
+      )}
+
+      {/* iOS "Add to Home Screen" prompt */}
+      {isIOS && !isInStandaloneMode && (
+        <div style={{
+          background: '#FEF3C7',
+          border: '1px solid #FCD34D',
+          borderRadius: 12,
+          padding: 16,
+          marginTop: 'var(--space-5)',
+        }}>
+          <div style={{ fontWeight: 600, color: '#92400E' }}>📱 התקן את BirthdayAI על האייפון שלך</div>
+          <div style={{ fontSize: 13, color: '#B45309', marginTop: 4 }}>
+            לחץ על ↑ ואז "הוסף למסך הבית" כדי לקבל התראות על ימי הולדת
+          </div>
+        </div>
+      )}
 
       {/* Two-column grid */}
       <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 'var(--space-6)', marginTop: 'var(--space-7)', alignItems: 'start' }}>
