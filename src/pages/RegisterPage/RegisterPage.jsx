@@ -24,6 +24,7 @@ export default function RegisterPage() {
 
   const [name,        setName]        = useState('')
   const [email,       setEmail]       = useState('')
+  const [gender,      setGender]      = useState('male')
   const [password,    setPassword]    = useState('')
   const [confirmPass, setConfirmPass] = useState('')
   const [touched,     setTouched]     = useState(false)
@@ -70,7 +71,7 @@ export default function RegisterPage() {
     if (error) { setServerError(error.message); setSubmitting(false); return }
 
     if (data.user) {
-      await supabase.from('profiles').insert({ id: data.user.id, name: name.trim() })
+      await supabase.from('profiles').insert({ id: data.user.id, name: name.trim(), gender })
     }
 
     setSubmitting(false)
@@ -182,6 +183,32 @@ export default function RegisterPage() {
             value={name} onChange={e => setName(e.target.value)}
             style={nameErr ? inputErr : inputOk}
           />
+
+          <div style={{ height: 'var(--space-4)' }} />
+
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>מגדר שלי</label>
+          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+            {[
+              { value: 'male',   label: '👨 זכר'  },
+              { value: 'female', label: '👩 נקבה' },
+            ].map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setGender(opt.value)}
+                style={{
+                  padding: '9px var(--space-4)',
+                  borderRadius: 'var(--radius-sm)',
+                  fontWeight: 600,
+                  fontSize: 'var(--font-size-label-max)',
+                  cursor: 'pointer',
+                  border:      gender === opt.value ? '1.5px solid var(--color-border-highlight)' : '1.5px solid var(--color-border)',
+                  background:  gender === opt.value ? 'var(--color-secondary)' : 'var(--color-surface)',
+                  color:       gender === opt.value ? 'var(--color-secondary-text)' : 'var(--color-text-muted)',
+                }}
+              >{opt.label}</button>
+            ))}
+          </div>
 
           <div style={{ height: 'var(--space-4)' }} />
 

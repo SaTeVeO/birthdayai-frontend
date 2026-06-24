@@ -55,6 +55,7 @@ export default function SettingsPage() {
 
   const [name,             setName]             = useState('')
   const [email,            setEmail]            = useState('')
+  const [gender,           setGender]           = useState('male')
   const [reminderDays,     setReminderDays]     = useState(3)
   const [preferredChannel, setPreferredChannel] = useState('whatsapp')
   const [success,          setSuccess]          = useState('')
@@ -75,6 +76,7 @@ export default function SettingsPage() {
 
       if (profile) {
         setName(profile.name || '')
+        setGender(profile.gender || 'male')
         setReminderDays(profile.reminder_days_before ?? 3)
         setPreferredChannel(profile.preferred_channel || 'whatsapp')
         // Sync DB language to context if set
@@ -96,6 +98,7 @@ export default function SettingsPage() {
         {
           user_id:              user.id,
           name,
+          gender,
           preferred_channel:    preferredChannel,
           reminder_days_before: reminderDays,
           language,
@@ -166,6 +169,18 @@ export default function SettingsPage() {
           onChange={e => setName(e.target.value)}
           style={{ ...inputStyle, marginBottom: 'var(--space-4)' }}
         />
+
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>מגדר שלי</label>
+        <ToggleGroup
+          value={gender}
+          onChange={setGender}
+          options={[
+            { value: 'male',   label: '👨 זכר'  },
+            { value: 'female', label: '👩 נקבה' },
+          ]}
+        />
+
+        <div style={{ height: 'var(--space-4)' }} />
 
         <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{t('settings.email')}</label>
         <input

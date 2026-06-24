@@ -68,6 +68,7 @@ export default function EditGreeting() {
   const partnerDebounceRef = useRef(null)
   const mountedRef        = useRef(true)
   const senderNameRef     = useRef('')
+  const senderGenderRef   = useRef('male')
 
   useEffect(() => () => {
     mountedRef.current = false
@@ -166,7 +167,7 @@ export default function EditGreeting() {
     setAiLoading(true)
     setAiError('')
     let cancelled = false
-    generateGreeting(contact, style, greetingLang, length, buildSignatureMode(), selectedChannel)
+    generateGreeting(contact, style, greetingLang, length, buildSignatureMode(), selectedChannel, senderGenderRef.current)
       .then(async result => {
         if (cancelled) return
         setText(result); setTextSource('new')
@@ -185,7 +186,7 @@ export default function EditGreeting() {
       if (!contact?.id || !mountedRef.current) return
       setAiLoading(true)
       setAiError('')
-      generateGreeting(contact, style, greetingLang, length, buildSignatureMode(), selectedChannel)
+      generateGreeting(contact, style, greetingLang, length, buildSignatureMode(), selectedChannel, senderGenderRef.current)
         .then(async result => {
           if (!mountedRef.current) return
           setText(result); setTextSource('new')
@@ -212,13 +213,14 @@ export default function EditGreeting() {
     console.log('user.id:', user?.id)
 
     async function init() {
-      // Fetch sender's profile name once
+      // Fetch sender's profile name and gender once
       const { data: profile } = await supabase
         .from('profiles')
-        .select('name, preferred_channel')
+        .select('name, preferred_channel, gender')
         .eq('user_id', user.id)
         .maybeSingle()
-      senderNameRef.current = profile?.name || user?.email?.split('@')[0] || ''
+      senderNameRef.current   = profile?.name || user?.email?.split('@')[0] || ''
+      senderGenderRef.current = profile?.gender || 'male'
       if (profile?.preferred_channel) setSelectedChannel(profile.preferred_channel)
 
       const { data: existingDraft, error } = await supabase
@@ -256,7 +258,7 @@ export default function EditGreeting() {
 
       setAiError('')
       try {
-        const result = await generateGreeting(contact, 'warm', 'he', 'medium', buildSignatureMode(), selectedChannel)
+        const result = await generateGreeting(contact, 'warm', 'he', 'medium', buildSignatureMode(), selectedChannel, senderGenderRef.current)
         if (cancelled) return
         setText(result)
         setTextSource('new')
@@ -283,7 +285,7 @@ export default function EditGreeting() {
     setAiLoading(true)
     setAiError('')
     let cancelled = false
-    generateGreeting(contact, style, greetingLang, length, buildSignatureMode(), selectedChannel)
+    generateGreeting(contact, style, greetingLang, length, buildSignatureMode(), selectedChannel, senderGenderRef.current)
       .then(async result => {
         if (cancelled) return
         setText(result)
@@ -305,7 +307,7 @@ export default function EditGreeting() {
     setAiLoading(true)
     setAiError('')
     try {
-      const result = await generateGreeting(contact, style, greetingLang, length, buildSignatureMode(), selectedChannel)
+      const result = await generateGreeting(contact, style, greetingLang, length, buildSignatureMode(), selectedChannel, senderGenderRef.current)
       setText(result)
       setTextSource('new')
       await saveGreeting(result)

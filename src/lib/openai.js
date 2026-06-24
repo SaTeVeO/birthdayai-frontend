@@ -51,7 +51,7 @@ const GENDER_PHRASES = {
 export const LENGTH_WORDS = { short: 50, medium: 100, long: 200 }
 
 // signatureMode: { type: 'none' } | { type: 'single', name } | { type: 'couple', name, partnerName }
-export async function generateGreeting(contact, style = 'warm', language = 'he', length = 'medium', signatureMode = { type: 'single', name: '' }, channel = 'whatsapp') {
+export async function generateGreeting(contact, style = 'warm', language = 'he', length = 'medium', signatureMode = { type: 'single', name: '' }, channel = 'whatsapp', senderGender = 'male') {
   const words     = LENGTH_WORDS[length] ?? 100
   const styleDesc = (STYLE_PROMPTS[language] ?? STYLE_PROMPTS.he)[style]
                  ?? (STYLE_PROMPTS[language] ?? STYLE_PROMPTS.he).warm
@@ -101,10 +101,13 @@ export async function generateGreeting(contact, style = 'warm', language = 'he',
     if (type === 'single' && name) {
       if (lang === 'he') return [
         `בסוף הברכה, חתום עם השם של השולח. שם השולח הוא: ${name}`,
-        `חוקי החתימה:
-- אם הקרבה היא אמא/אבא/סבתא/סבא (${PARENT_GRANDPARENT_HE}): חתום רק עם הקרבה (לדוגמה: "הבן שלך" או "הנכדה שלך") — אל תשתמש בשם
-- אם הקרבה היא אח/אחות (${SIBLING_HE}): חתום בשם פרטי בלבד (המילה הראשונה בלבד)
-- כל קרבה משפחתית אחרת: חתום בשם פרטי בלבד
+        `מגדר השולח: ${senderGender === 'female' ? 'נקבה' : 'זכר'}
+חוקי חתימה לפי מגדר השולח:
+- אם הקרבה היא אמא/אבא: חתום רק לפי מגדר — אם השולח נקבה: 'הבת שלך', אם זכר: 'הבן שלך' — אל תשתמש בשם
+- אם הקרבה היא סבתא/סבא: חתום רק לפי מגדר — אם השולח נקבה: 'הנכדה שלך', אם זכר: 'הנכד שלך' — אל תשתמש בשם
+- אם הקרבה היא אח ומגדר השולח נקבה: חתמי 'האחות שלך'
+- אם הקרבה היא אחות ומגדר השולח זכר: חתום 'האח שלך'
+- כל קרבה משפחתית אחרת: חתום בשם פרטי בלבד (המילה הראשונה בלבד)
 - קרבה רחוקה/עמיתים/שכנים (${FRIEND_HE}): חתום בשם מלא
 - אל תכתוב [שמך] או [שם] — כתוב את השם האמיתי: ${name}`,
       ]
@@ -165,6 +168,7 @@ export async function generateGreeting(contact, style = 'warm', language = 'he',
       genderedHobby,
       contact.notes && `מידע נוסף: ${contact.notes}.`,
       `סגנון הברכה: ${styleDesc}.`,
+      `מגדר השולח: ${senderGender === 'female' ? 'נקבה' : 'זכר'} — השתמש בצורות פועל מתאימות למגדר השולח לאורך כל הברכה.`,
       `הברכה צריכה להיות עד ${words} מילים בלבד. כתוב בעברית בלבד, אל תשתמש באנגלית או בכל שפה אחרת.`,
       channelHint,
       'חשוב מאוד: כתוב בעברית בלבד ללא אף מילה באנגלית או אותיות לטיניות. אם אתה רוצה לכתוב מילה שאתה מכיר רק באנגלית, תרגם אותה לעברית.',
