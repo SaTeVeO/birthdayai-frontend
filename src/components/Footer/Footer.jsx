@@ -3,7 +3,7 @@ import emailjs from '@emailjs/browser'
 import { useLanguage } from '../../contexts/LanguageContext'
 
 // ── Shared modal shell ──────────────────────────────────────────
-function Modal({ title, onClose, children }) {
+function Modal({ title, onClose, dir = 'rtl', children }) {
   // Close on Escape
   useEffect(() => {
     const handler = e => { if (e.key === 'Escape') onClose() }
@@ -23,7 +23,7 @@ function Modal({ title, onClose, children }) {
     >
       <div
         onClick={e => e.stopPropagation()}
-        dir="rtl"
+        dir={dir}
         style={{
           background: 'var(--color-surface)',
           borderRadius: 'var(--radius-modal)',
@@ -86,31 +86,29 @@ function Section({ title, children }) {
 
 // ── Privacy modal content ───────────────────────────────────────
 function PrivacyContent() {
+  const { t } = useLanguage()
   return (
     <>
       <p style={{ color: 'var(--color-text-faint)', fontSize: 12, margin: '0 0 20px' }}>
-        עדכון אחרון: יוני 2026
+        {t('footer.privacy_updated')}
       </p>
-      <Section title="איסוף מידע">
-        אנו אוספים את המידע הבא בעת השימוש בשירות: שם משתמש, כתובת דוא״ל, ונתוני אנשי הקשר שהמשתמש מזין באופן ידני (שם, תאריך יום הולדת, קרבה, טלפון, הערות).
+      <Section title={t('footer.privacy_collection_title')}>
+        {t('footer.privacy_collection_text')}
       </Section>
-      <Section title="שימוש במידע">
-        המידע משמש אך ורק לצורך פעולת השירות: יצירת ברכות מותאמות אישית בעזרת AI ושליחתן. איננו משתמשים במידע למטרות שיווקיות.
+      <Section title={t('footer.privacy_usage_title')}>
+        {t('footer.privacy_usage_text')}
       </Section>
-      <Section title="אבטחת מידע">
-        המידע מאוחסן בשרתי Supabase המוצפנים תחת תקני אבטחה מתקדמים. החיבור לשרת מוצפן באמצעות HTTPS.
+      <Section title={t('footer.privacy_security_title')}>
+        {t('footer.privacy_security_text')}
       </Section>
-      <Section title="שיתוף מידע">
-        אנו לא מוכרים, משכירים או משתפים את המידע האישי שלך עם צדדים שלישיים, למעט שירותי התשתית הנדרשים להפעלת האפליקציה (Supabase, OpenAI).
+      <Section title={t('footer.privacy_sharing_title')}>
+        {t('footer.privacy_sharing_text')}
       </Section>
-      <Section title="עוגיות (Cookies)">
-        האפליקציה משתמשת בעוגיות לצורך ניהול הסשן בלבד. אין שימוש בעוגיות מעקב או שיווקיות.
+      <Section title={t('footer.privacy_cookies_title')}>
+        {t('footer.privacy_cookies_text')}
       </Section>
-      <Section title="זכויות המשתמש">
-        יש לך הזכות לעיין במידע שנאסף עליך, לתקן אותו, ולבקש את מחיקתו. לפנייה בנושא זה ראה קישור "צור קשר".
-      </Section>
-      <Section title="יצירת קשר">
-        לכל שאלה בנושא פרטיות:{' '}
+      <Section title={t('footer.privacy_contact_title')}>
+        {t('footer.privacy_contact_text')}{' '}
         <a href="mailto:birthdayai.contact@gmail.com" style={{ color: 'var(--color-primary)' }}>
           birthdayai.contact@gmail.com
         </a>
@@ -121,32 +119,20 @@ function PrivacyContent() {
 
 // ── Terms modal content ─────────────────────────────────────────
 function TermsContent() {
+  const { t } = useLanguage()
   return (
     <>
       <p style={{ color: 'var(--color-text-faint)', fontSize: 12, margin: '0 0 20px' }}>
-        עדכון אחרון: יוני 2026
+        {t('footer.privacy_updated')}
       </p>
-      <Section title="קבלת התנאים">
-        השימוש בשירות BirthdayAI מהווה הסכמה לתנאי שימוש אלה. אם אינך מסכים לתנאים, אנא הימנע משימוש בשירות.
-      </Section>
-      <Section title="גיל מינימלי">
-        השירות מיועד למשתמשים מגיל 13 ומעלה. משתמשים מתחת לגיל 13 אינם רשאים להירשם.
-      </Section>
-      <Section title="אחריות המשתמש">
-        המשתמש אחראי לכל תוכן הברכות שהוא יוצר ושולח באמצעות השירות. יש להשתמש בשירות בתום לב ובאופן שאינו פוגע בפרטיות אחרים.
-      </Section>
-      <Section title="שימוש אסור">
-        אסור להשתמש בשירות לשליחת ספאם, תוכן פוגעני, הטרדה, או כל שימוש המנוגד לחוק הישראלי. BirthdayAI שומרת לעצמה הזכות לסגור חשבונות המפרים תנאים אלה ללא התראה מוקדמת.
-      </Section>
-      <Section title="השירות ניתן AS-IS">
-        השירות מסופק כמות שהוא (AS-IS), ללא אחריות מכל סוג. BirthdayAI אינה אחראית לנזקים ישירים או עקיפים הנובעים מהשימוש בשירות.
-      </Section>
-      <Section title="שינויים בשירות">
-        BirthdayAI שומרת לעצמה הזכות לשנות, להשעות או להפסיק את השירות בכל עת, עם או בלי הודעה מוקדמת.
-      </Section>
-      <Section title="דין חל">
-        תנאי שימוש אלה כפופים לדין הישראלי. כל סכסוך יתברר בבתי המשפט המוסמכים בישראל.
-      </Section>
+      <ul style={{ margin: 0, paddingInlineStart: 20, color: 'var(--color-text-muted)', lineHeight: 2.2 }}>
+        <li>{t('footer.terms_age')}</li>
+        <li>{t('footer.terms_responsibility')}</li>
+        <li>{t('footer.terms_spam')}</li>
+        <li>{t('footer.terms_suspension')}</li>
+        <li>{t('footer.terms_service')}</li>
+        <li>{t('footer.terms_law')}</li>
+      </ul>
     </>
   )
 }
@@ -157,6 +143,8 @@ function ContactContent() {
   const [email,          setEmail]          = useState('')
   const [message,        setMessage]        = useState('')
   const [contactSuccess, setContactSuccess] = useState(false)
+  const { t, language } = useLanguage()
+  const isRtl = language === 'he'
 
   async function handleSubmit() {
     if (!name || !email || !message) {
@@ -190,13 +178,13 @@ function ContactContent() {
     color: 'var(--color-text-primary)',
     background: 'var(--color-surface)',
     outline: 'none',
-    direction: 'rtl',
+    direction: isRtl ? 'rtl' : 'ltr',
   }
 
   return (
     <>
       <p style={{ color: 'var(--color-text-muted)', margin: '0 0 20px' }}>
-        לכל שאלה, בקשה או משוב, ניתן לפנות ישירות למייל:{' '}
+        {t('footer.contact_intro')}{' '}
         <a href="mailto:birthdayai.contact@gmail.com" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
           birthdayai.contact@gmail.com
         </a>
@@ -204,17 +192,17 @@ function ContactContent() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 5, color: 'var(--color-text-primary)' }}>שם</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 5, color: 'var(--color-text-primary)' }}>{t('footer.contact_name')}</label>
           <input
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="הכנס את שמך"
+            placeholder={t('footer.contact_name')}
             style={inputStyle}
           />
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 5, color: 'var(--color-text-primary)' }}>כתובת מייל</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 5, color: 'var(--color-text-primary)' }}>{t('footer.contact_email')}</label>
           <input
             type="email"
             value={email}
@@ -224,11 +212,11 @@ function ContactContent() {
           />
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 5, color: 'var(--color-text-primary)' }}>הודעה</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 5, color: 'var(--color-text-primary)' }}>{t('footer.contact_message')}</label>
           <textarea
             value={message}
             onChange={e => setMessage(e.target.value)}
-            placeholder="כתוב את הודעתך כאן..."
+            placeholder={t('footer.contact_message')}
             rows={5}
             style={{ ...inputStyle, resize: 'vertical', minHeight: 110 }}
           />
@@ -243,9 +231,9 @@ function ContactContent() {
             color: 'var(--color-text-primary)',
             fontSize: 14, lineHeight: 1.7,
           }}>
-            <div style={{ fontWeight: 700, marginBottom: 4 }}>תודה על פנייתך! נחזור אליך בהקדם 🙂</div>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>{t('footer.contact_success')}</div>
             <div style={{ color: 'var(--color-text-muted)' }}>
-              לפנייה ישירה:{' '}
+              {t('footer.contact_direct')}{' '}
               <a href="mailto:birthdayai.contact@gmail.com" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
                 birthdayai.contact@gmail.com
               </a>
@@ -266,7 +254,7 @@ function ContactContent() {
               boxShadow: 'var(--shadow-btn-primary)',
               alignSelf: 'flex-start',
             }}
-          >שלח הודעה</button>
+          >{t('footer.contact_send')}</button>
         )}
       </div>
     </>
@@ -276,7 +264,8 @@ function ContactContent() {
 // ── Footer ──────────────────────────────────────────────────────
 export default function Footer() {
   const [open, setOpen] = useState(null) // 'privacy' | 'terms' | 'contact' | null
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
+  const modalDir = language === 'he' ? 'rtl' : 'ltr'
 
   return (
     <>
@@ -322,17 +311,17 @@ export default function Footer() {
       </footer>
 
       {open === 'privacy' && (
-        <Modal title={t('footer.privacyTitle')} onClose={() => setOpen(null)}>
+        <Modal title={t('footer.privacyTitle')} onClose={() => setOpen(null)} dir={modalDir}>
           <PrivacyContent />
         </Modal>
       )}
       {open === 'terms' && (
-        <Modal title={t('footer.termsTitle')} onClose={() => setOpen(null)}>
+        <Modal title={t('footer.termsTitle')} onClose={() => setOpen(null)} dir={modalDir}>
           <TermsContent />
         </Modal>
       )}
       {open === 'contact' && (
-        <Modal title={t('footer.contactTitle')} onClose={() => setOpen(null)}>
+        <Modal title={t('footer.contactTitle')} onClose={() => setOpen(null)} dir={modalDir}>
           <ContactContent />
         </Modal>
       )}
