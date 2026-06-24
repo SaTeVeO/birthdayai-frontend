@@ -385,10 +385,10 @@ export default function Navbar({ variant = 'landing' }) {
     }}>
       <Logomark onClick={onLogoClick} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-        {LangSwitcher}
         {DarkBtn}
         <button
           onClick={() => navigate('/login')}
+          className="landing-nav-btn"
           style={{
             padding: '9px var(--space-4)',
             borderRadius: 'var(--radius-sm)',
@@ -399,6 +399,7 @@ export default function Navbar({ variant = 'landing' }) {
         >{t('nav.login')}</button>
         <button
           onClick={() => navigate('/register')}
+          className="landing-nav-btn"
           style={{
             padding: '9px 18px',
             borderRadius: 'var(--radius-sm)',

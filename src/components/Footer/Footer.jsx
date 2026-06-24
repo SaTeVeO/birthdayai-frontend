@@ -264,7 +264,7 @@ function ContactContent() {
 // ── Footer ──────────────────────────────────────────────────────
 export default function Footer() {
   const [open, setOpen] = useState(null) // 'privacy' | 'terms' | 'contact' | null
-  const { t, language } = useLanguage()
+  const { t, language, setLanguage } = useLanguage()
   const modalDir = language === 'he' ? 'rtl' : 'ltr'
 
   return (
@@ -288,9 +288,32 @@ export default function Footer() {
             <span style={{ fontWeight: 700, fontSize: 'var(--font-size-label-max)' }}>BirthdayAI</span>
           </div>
 
-          <span style={{ fontSize: 13, color: 'var(--color-text-faint)' }}>
-            {t('footer.rights')}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <span style={{ fontSize: 13, color: 'var(--color-text-faint)' }}>
+              {t('footer.rights')}
+            </span>
+            <div style={{ display: 'flex', gap: 2 }}>
+              {[
+                { key: 'he', flag: '🇮🇱' },
+                { key: 'en', flag: '🇺🇸' },
+                { key: 'ru', flag: '🇷🇺' },
+              ].map(l => (
+                <button
+                  key={l.key}
+                  onClick={() => setLanguage(l.key)}
+                  title={l.key}
+                  style={{
+                    width: 28, height: 28,
+                    borderRadius: 'var(--radius-sm)',
+                    border: language === l.key ? '1.5px solid var(--color-primary)' : '1px solid transparent',
+                    background: language === l.key ? 'var(--color-secondary)' : 'transparent',
+                    fontSize: 15, cursor: 'pointer', lineHeight: 1,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >{l.flag}</button>
+              ))}
+            </div>
+          </div>
 
           <div style={{ display: 'flex', gap: 20, fontSize: 13, color: 'var(--color-text-muted)' }}>
             {[

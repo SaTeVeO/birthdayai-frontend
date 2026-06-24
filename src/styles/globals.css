@@ -177,6 +177,13 @@ html, body {
   .nav-hide-mobile   { display: none !important; }
 }
 
+@media (max-width: 480px) {
+  .landing-nav-btn {
+    padding: 6px 12px !important;
+    font-size: 13px !important;
+  }
+}
+
 /* Greeting textarea direction overrides */
 textarea.greeting-ltr {
   direction: ltr !important;
