@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
@@ -68,7 +68,23 @@ export default function Navbar({ variant = 'landing' }) {
   const { user } = useAuth()
   const { language, setLanguage, t } = useLanguage()
   const [displayName, setDisplayName] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
   const { dark, toggle } = useDark()
+  const menuRef = useRef(null)
+
+  // Close menu on outside click / touch
+  useEffect(() => {
+    if (!menuOpen) return
+    function handleOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handleOutside)
+    document.addEventListener('touchstart', handleOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleOutside)
+      document.removeEventListener('touchstart', handleOutside)
+    }
+  }, [menuOpen])
 
   useEffect(() => {
     if (!user) return
@@ -105,6 +121,13 @@ export default function Navbar({ variant = 'landing' }) {
 
   const onLogoClick = () => navigate(user ? '/dashboard' : '/')
 
+  async function handleLogout() {
+    await supabase.auth.signOut({ scope: 'local' })
+    window.localStorage.clear()
+    window.sessionStorage.clear()
+    window.location.href = '/login'
+  }
+
   const DarkBtn = (
     <button onClick={toggle} style={darkBtnStyle} title={dark ? t('nav.darkOff') : t('nav.darkOn')}>
       {dark ? '☀️' : '🌙'}
@@ -129,6 +152,19 @@ export default function Navbar({ variant = 'landing' }) {
         >{l.flag}</button>
       ))}
     </div>
+  )
+
+  const Avatar = (
+    <div
+      onClick={() => navigate('/settings')}
+      style={{
+        width: 36, height: 36, borderRadius: 'var(--radius-full)',
+        background: 'var(--color-secondary)', color: 'var(--color-secondary-text)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontWeight: 700, fontSize: 'var(--font-size-label-max)',
+        cursor: 'pointer', flexShrink: 0,
+      }}
+    >{userInitial}</div>
   )
 
   /* ── Login / Register ───────────────────────────────────── */
@@ -174,75 +210,168 @@ export default function Navbar({ variant = 'landing' }) {
   /* ── Dashboard ──────────────────────────────────────────── */
   if (variant === 'dashboard') {
     return (
-      <nav className="nav-shell" style={{ ...shell, justifyContent: 'space-between' }}>
-        <Logomark onClick={onLogoClick} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button
-            className="nav-hide-mobile"
-            onClick={() => window.dispatchEvent(new CustomEvent('openAddContact'))}
-            style={{
-              padding: '9px var(--space-4)',
-              borderRadius: 'var(--radius-sm)',
-              background: 'var(--color-primary)', color: 'var(--color-surface)',
-              fontWeight: 600, fontSize: 'var(--font-size-label-max)',
-              border: 'none', cursor: 'pointer',
-              boxShadow: '0 1px 2px rgba(99,102,241,.4)',
-            }}
-          >{t('nav.addContact')}</button>
-          <button
-            className="nav-hide-mobile"
-            onClick={() => navigate('/contacts')}
-            style={{
-              padding: '9px var(--space-3)',
-              borderRadius: 'var(--radius-sm)',
-              background: 'transparent',
-              border: '1px solid var(--color-border)',
-              color: 'var(--color-text-muted)',
-              fontWeight: 600, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
-            }}
-          >{t('nav.contacts')}</button>
-          <button
-            className="nav-hide-mobile"
-            onClick={() => navigate('/settings')}
-            style={{
-              padding: '9px var(--space-3)',
-              borderRadius: 'var(--radius-sm)',
-              background: 'transparent',
-              border: '1px solid var(--color-border)',
-              color: 'var(--color-text-muted)',
-              fontWeight: 600, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
-            }}
-          >{t('nav.settings')}</button>
-          {LangSwitcher}
-          {DarkBtn}
-          <button
-            onClick={async () => {
-              await supabase.auth.signOut({ scope: 'local' })
-              window.localStorage.clear()
-              window.sessionStorage.clear()
-              window.location.href = '/login'
-            }}
-            style={{
-              padding: '9px var(--space-3)',
-              borderRadius: 'var(--radius-sm)',
-              background: 'transparent',
-              border: '1px solid var(--color-error)',
-              color: 'var(--color-error)',
-              fontWeight: 700, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
-            }}
-          >{t('nav.logout')}</button>
-          <div
-            onClick={() => navigate('/settings')}
-            style={{
-              width: 36, height: 36, borderRadius: 'var(--radius-full)',
-              background: 'var(--color-secondary)', color: 'var(--color-secondary-text)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 700, fontSize: 'var(--font-size-label-max)',
-              cursor: 'pointer',
-            }}
-          >{userInitial}</div>
-        </div>
-      </nav>
+      <div ref={menuRef} style={{ position: 'sticky', top: 0, zIndex: 50 }}>
+        {/* Navbar row */}
+        <nav
+          className="nav-shell"
+          style={{
+            ...shell,
+            position: 'relative',
+            top: 'unset',
+            zIndex: 'unset',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Logomark onClick={onLogoClick} />
+
+          {/* Desktop: all buttons visible */}
+          <div className="nav-desktop-items" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('openAddContact'))}
+              style={{
+                padding: '9px var(--space-4)',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--color-primary)', color: 'var(--color-surface)',
+                fontWeight: 600, fontSize: 'var(--font-size-label-max)',
+                border: 'none', cursor: 'pointer',
+                boxShadow: '0 1px 2px rgba(99,102,241,.4)',
+              }}
+            >{t('nav.addContact')}</button>
+            <button
+              onClick={() => navigate('/contacts')}
+              style={{
+                padding: '9px var(--space-3)',
+                borderRadius: 'var(--radius-sm)',
+                background: 'transparent',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-text-muted)',
+                fontWeight: 600, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
+              }}
+            >{t('nav.contacts')}</button>
+            <button
+              onClick={() => navigate('/settings')}
+              style={{
+                padding: '9px var(--space-3)',
+                borderRadius: 'var(--radius-sm)',
+                background: 'transparent',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-text-muted)',
+                fontWeight: 600, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
+              }}
+            >{t('nav.settings')}</button>
+            {LangSwitcher}
+            {DarkBtn}
+            <button
+              onClick={handleLogout}
+              style={{
+                padding: '9px var(--space-3)',
+                borderRadius: 'var(--radius-sm)',
+                background: 'transparent',
+                border: '1px solid var(--color-error)',
+                color: 'var(--color-error)',
+                fontWeight: 700, fontSize: 'var(--font-size-label-max)', cursor: 'pointer',
+              }}
+            >{t('nav.logout')}</button>
+            {Avatar}
+          </div>
+
+          {/* Mobile: dark toggle + avatar + hamburger */}
+          <div className="nav-hamburger" style={{ alignItems: 'center', gap: 8 }}>
+            {DarkBtn}
+            {Avatar}
+            <button
+              onClick={() => setMenuOpen(o => !o)}
+              aria-label="תפריט"
+              style={{
+                width: 36, height: 36,
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--color-border)',
+                background: 'transparent',
+                cursor: 'pointer', fontSize: 18,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--color-text-primary)',
+              }}
+            >{menuOpen ? '✕' : '☰'}</button>
+          </div>
+        </nav>
+
+        {/* Mobile dropdown */}
+        {menuOpen && (
+          <div style={{
+            position: 'absolute', top: '100%', left: 0, right: 0,
+            background: 'var(--color-surface)',
+            borderBottom: '1px solid var(--color-border-subtle)',
+            boxShadow: '0 8px 24px rgba(0,0,0,.12)',
+            padding: '12px 16px 16px',
+            display: 'flex', flexDirection: 'column', gap: 8,
+          }}>
+            <button
+              onClick={() => { setMenuOpen(false); window.dispatchEvent(new CustomEvent('openAddContact')) }}
+              style={{
+                width: '100%', padding: '12px 16px', textAlign: 'start',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--color-primary)', color: 'var(--color-surface)',
+                fontWeight: 600, fontSize: 15,
+                border: 'none', cursor: 'pointer',
+              }}
+            >{t('nav.addContact')}</button>
+            <button
+              onClick={() => { setMenuOpen(false); navigate('/contacts') }}
+              style={{
+                width: '100%', padding: '12px 16px', textAlign: 'start',
+                borderRadius: 'var(--radius-sm)',
+                background: 'transparent',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-text-body)',
+                fontWeight: 600, fontSize: 15, cursor: 'pointer',
+              }}
+            >{t('nav.contacts')}</button>
+            <button
+              onClick={() => { setMenuOpen(false); navigate('/settings') }}
+              style={{
+                width: '100%', padding: '12px 16px', textAlign: 'start',
+                borderRadius: 'var(--radius-sm)',
+                background: 'transparent',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-text-body)',
+                fontWeight: 600, fontSize: 15, cursor: 'pointer',
+              }}
+            >{t('nav.settings')}</button>
+
+            <div style={{ height: 1, background: 'var(--color-border-subtle)', margin: '4px 0' }} />
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              {LANG_FLAGS.map(l => (
+                <button
+                  key={l.key}
+                  onClick={() => setLanguage(l.key)}
+                  style={{
+                    flex: 1, padding: '8px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: language === l.key ? '1.5px solid var(--color-primary)' : '1px solid var(--color-border)',
+                    background: language === l.key ? 'var(--color-secondary)' : 'transparent',
+                    fontSize: 20, cursor: 'pointer',
+                  }}
+                >{l.flag}</button>
+              ))}
+            </div>
+
+            <div style={{ height: 1, background: 'var(--color-border-subtle)', margin: '4px 0' }} />
+
+            <button
+              onClick={handleLogout}
+              style={{
+                width: '100%', padding: '12px 16px', textAlign: 'start',
+                borderRadius: 'var(--radius-sm)',
+                background: 'transparent',
+                border: '1px solid var(--color-error)',
+                color: 'var(--color-error)',
+                fontWeight: 700, fontSize: 15, cursor: 'pointer',
+              }}
+            >{t('nav.logout')}</button>
+          </div>
+        )}
+      </div>
     )
   }
 

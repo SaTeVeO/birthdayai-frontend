@@ -168,6 +168,15 @@ html, body {
   min-height: -webkit-fill-available;
 }
 
+/* Responsive navbar */
+.nav-hamburger { display: none; }
+
+@media (max-width: 768px) {
+  .nav-desktop-items { display: none !important; }
+  .nav-hamburger     { display: flex !important; }
+  .nav-hide-mobile   { display: none !important; }
+}
+
 /* Greeting textarea direction overrides */
 textarea.greeting-ltr {
   direction: ltr !important;
