@@ -46,6 +46,9 @@ https://birthdayai-ten.vercel.app
 - **Deploy:** Vercel
 - **PWA:** vite-plugin-pwa
 
+## תרשים ERD
+![ERD](./erd.png)
+
 ## הרצה מקומית
 
 1. Clone the repo
