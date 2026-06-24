@@ -1,16 +1,65 @@
-# React + Vite
+# BirthdayAI 🎂
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## סקירה כללית
 
-Currently, two official plugins are available:
+BirthdayAI היא אפליקציית ווב שמזכירה ימי הולדת ויוצרת ברכות אישיות בעזרת AI ושולחת אותן לוואטסאפ או מייל בלחיצת כפתור.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## הבעיה שהפרויקט פותר
 
-## React Compiler
+אנשים עסוקים שוכחים לברך את יקיריהם ביום הולדתם, או לא יודעים מה לכתוב כשהם זוכרים.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## קהל היעד
 
-## Expanding the ESLint configuration
+אנשים עסוקים שרוצים לשמור על קשרים חברתיים ומשפחתיים בלי להשקיע זמן רב. כולל מנהלי משאבי אנוש שרוצים לברך עובדים.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## מתחרים ובידול
+
+| מתחרה | מה חסר |
+|--------|---------|
+| פייסבוק | ברכה גנרית, לא שולח לוואטסאפ |
+| גוגל קלנדר | רק מזכיר, לא יוצר ברכה |
+| Moonback | אין AI אישי, אין שליחה אוטומטית |
+
+BirthdayAI הוא היחיד שמשלב: תזכורת + ברכה אישית מ-AI + שליחה בלחיצת כפתור + תמיכה ב-3 שפות.
+
+## קישור לפרויקט החי
+
+https://birthdayai-ten.vercel.app
+
+## שירותים חיצוניים ואינטגרציות
+
+| שירות | סוג | תפקיד |
+|--------|-----|--------|
+| Supabase | Backend + DB | מסד נתונים, אימות משתמשים, RLS |
+| Google OAuth | אימות | התחברות עם חשבון גוגל |
+| OpenAI API | AI | יצירת ברכות אישיות |
+| EmailJS | מייל | טופס יצירת קשר |
+| Vercel | Hosting | אחסון ופריסה |
+| Supabase Edge Functions | שרת | שליחת Push Notifications |
+| Web Push API | התראות | תזכורות יום הולדת |
+
+## טכנולוגיות
+
+- **Frontend:** Vite + React + React Router
+- **Backend:** Supabase (PostgreSQL, Auth, RLS, Edge Functions)
+- **AI:** OpenAI GPT-4o-mini
+- **Deploy:** Vercel
+- **PWA:** vite-plugin-pwa
+
+## הרצה מקומית
+
+1. Clone the repo
+2. `npm install`
+3. צור קובץ `.env` עם:
+   ```
+   VITE_SUPABASE_URL=...
+   VITE_SUPABASE_PUBLISHABLE_KEY=...
+   VITE_OPENAI_API_KEY=...
+   VITE_VAPID_PUBLIC_KEY=...
+   ```
+4. `npm run dev`
+
+## משתמש דמו לבדיקה
+
+- **Email:** test@birthdayai.com
+- **Password:** test1234
