@@ -34,11 +34,12 @@ const shell = {
   display: 'flex',
   alignItems: 'center',
   padding: '0 var(--space-8)',
+  paddingTop: 'env(safe-area-inset-top)',
   borderBottom: '1px solid var(--color-border-subtle)',
   background: 'var(--color-surface)',
   position: 'sticky',
   top: 0,
-  zIndex: 20,
+  zIndex: 50,
 }
 
 function useDark() {

@@ -104,6 +104,12 @@
   --shadow-raised:      0 4px 14px -4px rgba(99, 102, 241, 0.25);
   --shadow-modal:       0 24px 60px -12px rgba(0, 0, 0, 0.4);
   --shadow-btn-primary: 0 4px 14px rgba(99, 102, 241, 0.35);
+
+  /* Mobile safe area insets */
+  --safe-area-top:    env(safe-area-inset-top);
+  --safe-area-bottom: env(safe-area-inset-bottom);
+  --safe-area-left:   env(safe-area-inset-left);
+  --safe-area-right:  env(safe-area-inset-right);
 }
 
 /* ── Dark mode ───────────────────────────────────────────────── */
@@ -148,11 +154,18 @@ html.dark {
   --shadow-modal:  0 24px 60px -12px rgba(0,0,0,.7);
 }
 
-/* Smooth theme transitions */
+/* Smooth theme transitions + iOS viewport fix */
 html, body {
+  height: 100%;
+  min-height: -webkit-fill-available;
   background: var(--color-bg);
   color: var(--color-text-primary);
   transition: background 0.15s, color 0.15s;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
 }
 
 /* Greeting textarea direction overrides */
@@ -165,4 +178,30 @@ textarea.greeting-rtl {
   direction: rtl !important;
   text-align: right !important;
   unicode-bidi: embed !important;
+}
+
+/* Cross-browser compatibility */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent iOS Safari auto-zoom on input focus */
+input, select, textarea {
+  font-size: 16px !important;
 }
